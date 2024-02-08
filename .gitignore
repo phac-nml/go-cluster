@@ -1,0 +1,5 @@
+*.txt
+*.tab
+*.o
+*_gcc
+src/pdists

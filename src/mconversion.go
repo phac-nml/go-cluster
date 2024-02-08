@@ -109,17 +109,21 @@ func unique_values(file_path string) (*[]string, int) {
 }
 
 func pad_value(characters string, mask []byte) []byte {
+	/* Pad the string to not offset the file writing locations
+	characters: the characters to pad
+	mask: the byte mask to re-use
+	*/
 	values := make([]byte, len(mask))
 	copy(values, mask)
 	for i, v := range characters {
 		
 		values[i] = byte(v)
 	}
-	//fmt.Fprintf(os.Stderr, "Mask: %s values: %s len(mask): %d len(values) : %d\n", mask, values, len(mask), len(values))
 	return values
 }
 
 func make_mask(modulus int) []byte {
+	// Create a buffer of spaces for each value to fill in
 	mask := make([]byte, modulus+1)
 	for i := range mask {
 		mask[i] = ' '
@@ -243,7 +247,7 @@ func calculate_buffer_position(p1 int, p2 int, modulus int) int64 {
 }
 
 func print_buffer(buffer *[]int, modulus int, buff_size int){
-	// This will go once memory mapping is implemented
+	// ! This will go once memory mapping is implemented
 	fmt.Fprintf(os.Stdout, "\n")
 	for i := 1; i < buff_size; i++{
 		fmt.Fprintf(os.Stdout, "%d\t", (*buffer)[i-1])
@@ -256,13 +260,15 @@ func print_buffer(buffer *[]int, modulus int, buff_size int){
 
 
 
-func pariwise_to_matrix() {
-	/* Old main functin for the mconversion routine.
+func pariwise_to_matrix(input_file string, output_file string) {
+	/* Old main function for the mconversion routine.
 
-	Needs to be optimized to use buffers for output, and inlined in the rest of the main package.
+	Needs to be optimized to use buffers for output, so the buffer can be sorted and sequential writes are read to disk
+
+	TODO need to include sample names when reading them in to add to annotate the matrix
 	
 	*/
-	sorted_keys, longest_val := unique_values(os.Args[1])
+	sorted_keys, longest_val := unique_values(input_file)
 	key_positions := map[string]int{}
 
 	vals := 0
@@ -274,13 +280,14 @@ func pariwise_to_matrix() {
 	//buff_size := calculate_buffer_size(len(key_positions))
 	//buffer := make([]int, buff_size)
 
-	var output string = "data/test_matrix.txt"
-	write_matrix(os.Args[1], output, &key_positions, longest_val)
+	//var output string = "data/test_matrix.txt"
+	var output string = output_file
+	write_matrix(input_file, output, &key_positions, longest_val)
 
 	//get_matrix_values(os.Args[1], &key_positions, &buffer)
 	//print_buffer(&buffer, len(key_positions), buff_size)
 
-	fmt.Println("Done", longest_val)
+	log.Println("Done", longest_val)
 
 }
 

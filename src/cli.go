@@ -32,11 +32,13 @@ func cli() {
 multi-threading. e.g. load-factor * available cpus = minimum number of profiles required for multithreading.
 It is best to use the default value which indicates that you have more rows of data then CPUs on your computer.`)
 	flag.IntVar(&DIST_FUNC, "distance", 0, distance_func_help)
+	flag.StringVar(&MOLTEN_FILE, "molten", "", "File path to a previously generated output for conversion into a distance matrix.")
+	flag.StringVar(&OUTPUT_FILE, "output", "", "Name of output file.")
 
 	flag.Parse()
 	if len(os.Args) == 1 {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	fmt.Printf("File: %s", INPUT_PROFILE)
+	//fmt.Printf("File: %s", INPUT_PROFILE)
 }

@@ -8,40 +8,25 @@ Matthew Wells: 2024-04-06
 
 package main
 
+
 type DistFunc struct {
 	function func(*[]int, *[]int) float64
 	assignment int
 	help string
+	truncate bool // to truncate the output value to an integer or to remain as a float
 }
 
 
-var ham = DistFunc{function: hamming_distance, assignment: 0, help: "Hamming Distance"}
-var ham_missing = DistFunc{function: hamming_distance_missing, assignment: 1, help: "Hamming distance skipping missing values"}
-var scaled = DistFunc{function: scaled_distance, assignment: 2, help: "Scaled Distance"}
-var scaled_missing = DistFunc{function: scaled_distance_missing, assignment: 3, help: "Scaled distance skipping missing values"}
+var ham = DistFunc{function: hamming_distance, assignment: 0, help: "Hamming Distance", truncate: true}
+var ham_missing = DistFunc{function: hamming_distance_missing, assignment: 1, help: "Hamming distance skipping missing values", truncate: true}
+var scaled = DistFunc{function: scaled_distance, assignment: 2, help: "Scaled Distance", truncate: false}
+var scaled_missing = DistFunc{function: scaled_distance_missing, assignment: 3, help: "Scaled distance skipping missing values", truncate: false}
 
+// update distance functions, with their position in the array pertaining to their calling
+var distance_functions = []DistFunc{ham, ham_missing, scaled, scaled_missing}
 
 var DIST_FUNC = 0 // Distance function default
 
-func select_dist_func() func(*[]int, *[]int) float64 {
-	/*
-	Select  distance function based on a cmd-line paramter
-
-	This logic can definately be cleaned up to make things easier to maintain
-	*/
-
-	switch DIST_FUNC {
-		case ham.assignment:
-			return ham.function
-		case ham_missing.assignment:
-			return ham_missing.function
-		case scaled.assignment:
-			return scaled.function
-		case scaled_missing.assignment:
-			return scaled_missing.function
-	}
-	return ham_missing.function
-}
 
 func hamming_distance(profile_1 *[]int, profile_2 *[]int) float64 {
 	/* Hamming distance not including missing data

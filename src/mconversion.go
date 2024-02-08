@@ -52,11 +52,25 @@ import (
 	"sort"
 )
 
+func check(e error) {
+    if e != nil {
+        panic(e)
+    }
+}
 
 func open_file(file_path string, open_type int) *os.File {
 	file, err := os.OpenFile(file_path, int(open_type), 0755)
 	if err != nil {
-		log.Fatal(err)
+		if os.IsNotExist(err) && open_type == os.O_WRONLY {
+			_, err := os.Create(file_path)
+			if err != nil {
+				log.Fatal(err)
+				file = open_file(file_path, open_type)
+			}
+		}else{
+			log.Fatal(err)
+		}
+		
 	}
 	return file
 }

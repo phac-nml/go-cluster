@@ -8,7 +8,6 @@ Matthew Wells:2024-02-07
 package main
 
 import (
-	"os"
 	"log"
 	"time"
 	"runtime"
@@ -67,8 +66,10 @@ func buckets_indices(data_length int, bucket_size int) [][]int {
 	x[1] = data_length
 	bucks = append(bucks, x)
 	
-	log.Println("Using %d threads for running.", len(bucks))
-	log.Println("Allocating ~%d profiles to a thread.", window)
+	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks))
+	log.Println(threads_running)
+	profiles_to_thread := fmt.Sprintf("Allocating ~%d profiles to a thread.", window)
+	log.Println(profiles_to_thread)
 	return bucks
 }
 
@@ -78,9 +79,9 @@ func output_string(id1 *string, id2 *string, number float64, f *bufio.Writer) {
 	truncate := distance_functions[DIST_FUNC].truncate
 	
 	if truncate {
-		fmt.Fprintf(os.Stdout, "%s %s %.0f\n", *id1, *id2, number)
+		fmt.Fprintf(f, "%s %s %.0f\n", *id1, *id2, number)
 	}else {
-		fmt.Fprintf(os.Stdout, "%s %s %.2f\n", *id1, *id2, number)
+		fmt.Fprintf(f, "%s %s %.2f\n", *id1, *id2, number)
 	}
 }
 
@@ -107,7 +108,7 @@ func thread_execution(data_slice *[]*Profile, waitgroup * sync.WaitGroup, profil
 }
 
 
-func run_data(profile_data *[]*Profile) {
+func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 	/* Schedule and arrange the calculation of the data in parallel
 	TODO redistribute data across threads at run time
 	TODO writing to stdout will be the initial method outputting calculated results, but this will likely change in the future
@@ -124,10 +125,6 @@ func run_data(profile_data *[]*Profile) {
 	buckets := buckets_indices(len(data), bucket_size)
 	arr_pos := 1
 
-	f := bufio.NewWriter(os.Stdout)
-	defer f.Flush()
-
-	//output_channel := make(chan *OutputValue, output_channel_length) // TODO dump channel if full?
 
 	for g := range data[0:] {
 		var wg sync.WaitGroup
@@ -145,7 +142,8 @@ func run_data(profile_data *[]*Profile) {
 			}
 			bucket_index++
 			end := time.Now().Sub(start)
-			log.Println("One thread depleted in: %fs", end.Seconds())
+			thread_depletion_time := fmt.Sprintf("One thread depleted in: %fs", end.Seconds())
+			log.Println(thread_depletion_time)
 			start = time.Now()
 		}
 		arr_pos++;

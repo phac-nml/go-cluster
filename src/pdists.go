@@ -1,16 +1,10 @@
 package main
 
 import (
-	_ "io"
-	_ "bufio"
 	"os"
-	"fmt"
-	_ "log"
-	_ "strconv"
-	_ "strings"
-	_ "sync"
-	_ "runtime"
-	_ "time"
+	"log"
+	"bufio"
+	"io"
 )
 
 func hamming_dist(d1 *[]int, d2 *[]int) int {
@@ -25,6 +19,7 @@ func hamming_dist(d1 *[]int, d2 *[]int) int {
 	//}
 	return diffs
 }
+
 
 
 var CPU_LOAD_FACTOR = 10
@@ -46,9 +41,21 @@ func main() {
 	data_ := load_profile(INPUT_PROFILE)
 	data := *data_
 
-	run_data(&data)
+	var f *bufio.Writer
+	if OUTPUT_FILE != "" {
+		file := open_file(OUTPUT_FILE, os.O_WRONLY)
+		defer file.Close()
+		f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
+	}else{
+		f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
+	}
 
-	fmt.Fprintf(os.Stderr, "All threads depleted.\n")
-	fmt.Fprintf(os.Stderr, "Done\n")
+	
+	defer f.Flush()
+	
+	run_data(&data, f)
+
+	log.Println("All threads depleted.")
+	log.Println("Done")
 
 }

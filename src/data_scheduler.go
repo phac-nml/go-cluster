@@ -34,7 +34,8 @@ func buckets_indices(data_length int, bucket_size int) [][]int {
 	cpu_load_factor := CPU_LOAD_FACTOR // Need to add description to global options
 	window := bucket_size
 
-	log.Println("CPU load factor x10.")
+	cpu_load_string := fmt.Sprintf("CPU load factor x%d", CPU_LOAD_FACTOR)
+	log.Println(cpu_load_string)
 	
 	if window > data_length {
 		x := make([]int, 2)
@@ -62,28 +63,21 @@ func buckets_indices(data_length int, bucket_size int) [][]int {
 	}
 	
 	x := make([]int, 2)
-	x[0] = data_length - window 
+	x[0] = bucks[len(bucks) - 1][1] 
 	x[1] = data_length
 	bucks = append(bucks, x)
 	
 	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks))
 	log.Println(threads_running)
-	profiles_to_thread := fmt.Sprintf("Allocating ~%d profiles to a thread.", window)
+	profiles_to_thread := fmt.Sprintf("Allocating ~%d profiles per a thread.", window)
 	log.Println(profiles_to_thread)
+	//log.Println(bucks)
 	return bucks
 }
 
 
 
-func output_string(id1 *string, id2 *string, number float64, f *bufio.Writer) {
-	truncate := distance_functions[DIST_FUNC].truncate
-	
-	if truncate {
-		fmt.Fprintf(f, "%s %s %.0f\n", *id1, *id2, number)
-	}else {
-		fmt.Fprintf(f, "%s %s %.2f\n", *id1, *id2, number)
-	}
-}
+
 
 func thread_execution(data_slice *[]*Profile, waitgroup * sync.WaitGroup, profile_compare *Profile, start_idx int, end_idx int, dist_fn func(*[]int, *[]int) float64, f *bufio.Writer){
 	/* Compute profile differences.
@@ -96,11 +90,18 @@ func thread_execution(data_slice *[]*Profile, waitgroup * sync.WaitGroup, profil
 	dist_fn: The distance function to use for calculation of differences. Takes pointer to two profile to compare and returns a float 64
 	*/
 
+	truncate := distance_functions[DIST_FUNC].truncate
+	defer f.Flush()
+
 	// TODO need to pass a slice properly in the future
 	for i := start_idx; i < end_idx; i++ {
 		x := dist_fn((*data_slice)[i].profile, profile_compare.profile);
-		// TODO replace where output is being dumped with a shared buffer
-		output_string(&profile_compare.name, &(*data_slice)[i].name, x, f)
+
+		if truncate {
+			fmt.Fprintf(f, "%s %s %.0f\n", profile_compare.name, (*data_slice)[i].name, x)
+		}else {
+			fmt.Fprintf(f, "%s %s %.2f\n", profile_compare.name, (*data_slice)[i].name, x)
+		}
 	}
 
 	defer waitgroup.Done()
@@ -121,6 +122,7 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 
 	bucket_index := 0
 	empty_array := make([]int, 1)
+	empty_name := ""
 	bucket_size := calculate_bucket_size(len(data))
 	buckets := buckets_indices(len(data), bucket_size)
 	arr_pos := 1
@@ -139,6 +141,8 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 		if len(buckets) > 1 && arr_pos % bucket_size == 0 {
 			for f := buckets[bucket_index][1] - bucket_size; f < buckets[bucket_index][1]; f++ {
 				data[f].profile = &empty_array;
+				data[f].name = empty_name;
+				
 			}
 			bucket_index++
 			end := time.Now().Sub(start)

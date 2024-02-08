@@ -54,6 +54,7 @@ func load_profile(file_path string) *[]*Profile {
 		data_in := make([]int, len(input_text) - 1) // Create an array to populate
 
 		for f, x := range input_text[1:len(input_text)] { // may require offset by -1
+			// ? Can probasbly just call everything a base 64 to handle strings
 			i, err := strconv.ParseInt(x, numeric_base, 64) // Converts integer in, to base 10 64bit number TODO may need to handle hex values for hashes
 			if err != nil {
 				// TODO trigger clean up here

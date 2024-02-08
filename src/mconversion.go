@@ -37,6 +37,8 @@ A buffer can be written to in parallel then dumped to a file
 - new lines can be added after again
 =============================================================================
 
+TODO this currently wont work as output format changed
+
 Matthew Wells: 2024-02-07
 */
 
@@ -54,8 +56,15 @@ import (
 	"sort"
 )
 
+
+const (
+	profile_1_pos = 0
+	profile_2_pos = 1
+	comparison_pos = 2
+)
+
 func open_file(file_path string, open_type int) *os.File {
-	file, err := os.OpenFile(file_path, int(open_type), 0755)
+	file, err := os.OpenFile(file_path, int(open_type), 0555)
 	if err != nil {
 		if os.IsNotExist(err) && open_type == os.O_WRONLY {
 			_, err := os.Create(file_path)
@@ -81,40 +90,48 @@ func parse_int(value string) int {
 }
 
 
-func get_keys(value *map[string]bool) *[]string {
+func get_keys(value *map[string]bool) (*[]string, int ){
 	map_vals := make([]string, len(*value))
 	vals := 0
+	longest_key := 0
 	for k, _ := range *value {
+		if len(k) > longest_key {
+			longest_key = len(k)
+		}
 		map_vals[vals] = k
 		vals++
 	}
 	map_vals = map_vals[0:vals]
 	sort.Strings(map_vals)
 	
-	return &map_vals
+	return &map_vals, longest_key
 }
 
-func unique_values(file_path string) (*[]string, int) {
+
+
+func unique_values(file_path string) (*[]string, int, int) {
 	set := map[string]bool{}
 	file := open_file(file_path, os.O_RDONLY)
 	reader := bufio.NewReader(io.Reader(file))
 	longest_val := 0
+
 	for {
 		rl, err := reader.ReadString('\n')
 		if err != nil {
 			break
 		}
+
 		data := strings.Split(rl, " ")
-		len_int := len(data[5])
+		len_int := len(data[comparison_pos])
 		if len_int > longest_val {
 			longest_val = len_int
 		}
-		set[data[1]] = true
-		set[data[3]] = true
+		set[data[profile_1_pos]] = true
+		set[data[profile_2_pos]] = true
 	}
 	defer file.Close()
-	sorted_keys := get_keys(&set)
-	return sorted_keys, longest_val
+	sorted_keys, longest_key := get_keys(&set)
+	return sorted_keys, longest_val, longest_key
 	
 }
 
@@ -166,13 +183,13 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 
 		// Get data positions
 		data := strings.Split(rl, " ")
-		string_val_up := data[len(data)-1]
+		string_val_up := data[comparison_pos]
 		string_val_up = string_val_up[:len(string_val_up)-1] // drop new line character
 		string_val := pad_value(string_val_up, mask)
 		
 		// Id locations
-		p1 := (*positions)[data[1]]
-		p2 := (*positions)[data[3]]
+		p1 := (*positions)[data[profile_1_pos]]
+		p2 := (*positions)[data[profile_2_pos]]
 		sp1 := calculate_buffer_position(p1, p2, modulus)
 		sp2 := calculate_buffer_position(p2, p1, modulus)
 
@@ -222,19 +239,19 @@ func get_matrix_values(file_path string, positions *map[string]int, buffer *[]in
 			break
 		}
 		data := strings.Split(rl, " ")
-		string_val := data[len(data)-1]
+		string_val := data[comparison_pos]
 		string_val = string_val[:len(string_val)-1] // drop new line character
 		
 		// Id locations
-		p1 := (*positions)[data[1]]
-		p2 := (*positions)[data[3]]
+		p1 := (*positions)[data[profile_1_pos]]
+		p2 := (*positions)[data[profile_2_pos]]
 
 		int_val := parse_int(string_val)
 		sp1 := calculate_buffer_position(p1, p2, modulus)
 		sp2 := calculate_buffer_position(p2, p1, modulus)
 		(*buffer)[sp1] = int_val
 		(*buffer)[sp2] = int_val
-		//fmt.Fprintf(os.Stderr, "%d %d %d\n", p1, p2, int_val)
+
 	}
 	defer file.Close()
 }
@@ -278,8 +295,11 @@ func pariwise_to_matrix(input_file string, output_file string) {
 	TODO need to include sample names when reading them in to add to annotate the matrix
 	
 	*/
-	sorted_keys, longest_val := unique_values(input_file)
+	sorted_keys, longest_val, longest_key := unique_values(input_file)
 	key_positions := map[string]int{}
+	longest_in := fmt.Sprintf("Longest key: %d", longest_key)
+	
+	log.Println(longest_in)
 
 	vals := 0
 	for _, v := range *sorted_keys {

@@ -21,7 +21,9 @@ For creating file in memory:
 	- if padding characters pose an issue they can be stripped in another pass of writing
 	- each line will have to be padded with a new line character
 
-TODO once memory mapping is implemented, we can write to the file in parallel
+TODO write to array in parallel, then sort to create sequential writes to a file
+	- This is currently no in parallel, but a buffer can be written to sorting writes output writes
+
 
 apparently file systems to not like writing to files in parallel
 
@@ -51,12 +53,6 @@ import (
 	"strings"
 	"sort"
 )
-
-func check(e error) {
-    if e != nil {
-        panic(e)
-    }
-}
 
 func open_file(file_path string, open_type int) *os.File {
 	file, err := os.OpenFile(file_path, int(open_type), 0755)
@@ -153,7 +149,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	reader := bufio.NewReader(io.Reader(file))
 	
 	// output data fields
-	output := open_file(output_path, os.O_WRONLY | os.O_CREATE)
+	output := open_file(output_path, os.O_WRONLY | os.O_CREATE) // making this a buffered output may be easier
 
 	// columns size
 	modulus := len(*positions)
@@ -291,15 +287,8 @@ func pariwise_to_matrix(input_file string, output_file string) {
 		vals++
 	}
 
-	//buff_size := calculate_buffer_size(len(key_positions))
-	//buffer := make([]int, buff_size)
-
-	//var output string = "data/test_matrix.txt"
 	var output string = output_file
 	write_matrix(input_file, output, &key_positions, longest_val)
-
-	//get_matrix_values(os.Args[1], &key_positions, &buffer)
-	//print_buffer(&buffer, len(key_positions), buff_size)
 
 	log.Println("Done", longest_val)
 

@@ -27,8 +27,6 @@ var INPUT_PROFILE string = ""
 var MOLTEN_FILE string = ""
 var OUTPUT_FILE string = ""
 var BUFFER_SIZE = 16384 // 3 times bigger then 4096
-//var output_channel_length = 2000 // could probably make this a bucket length
-//var output_channel_length = 10 // Making smaller for testing
 
 func main() {
 	cli()

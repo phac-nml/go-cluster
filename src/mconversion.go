@@ -165,6 +165,16 @@ func make_mask(modulus int) []byte {
 
 
 func write_matrix(input_path string, output_path string, positions *map[string]int, longest_val int){
+	/*
+	
+	TODO optimize for sequential writes
+		1. Fill array containing data pairs of output position, and text out
+		2. Sort array on position out
+		3. Subtract difference in location from each sequential write.
+			- e.g. File pointer is going to be increasing each time, so the next write should be relevant to that offset
+		4. after flushing buffer, return file pointer to 0
+		6. After all data is iterated through, flush buffer and remaining entries
+	*/
 
 	// input data fields
 	file := open_file(input_path, os.O_RDONLY)
@@ -174,7 +184,6 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	output := open_file(output_path, os.O_WRONLY | os.O_CREATE) // making this a buffered output may be easier
 
 	// columns size
-	//modulus := len(*positions) + 1// increase length by one to include data name row
 	modulus := len(*positions) + 1 // increase length by one to include data name row
 	modulus_64 := int64(modulus)
 
@@ -195,10 +204,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		string_val_up = string_val_up[:len(string_val_up)-1] // drop new line character
 		string_val := pad_value(string_val_up, mask)
 		
-		// Id locations
-		//p1 := (*positions)[data[profile_1_pos]]
-		//p2 := (*positions)[data[profile_2_pos]]
-
+		// Get data positions, + 1 to offset their position in the matrix
 		p1 := (*positions)[data[profile_1_pos]] + 1
 		p2 := (*positions)[data[profile_2_pos]] + 1
 
@@ -248,8 +254,6 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		// Write at offsets
 		output.Seek(0, io.SeekStart)
 		// * name pad_len should only be applied to one value, this will differ for the top row
-		//b1, err := output.WriteAt(string_val, sp1 * pad_len)
-		//b1, err := output.WriteAt(string_val, (sp1 * pad_len) + pad_len) // increasing by one pad for label name
 		b1, err := output.WriteAt(string_val, (sp1 * pad_len)) // increasing by one pad for label name
 		_ = b1
 		if err != nil {
@@ -257,8 +261,6 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		}
 
 		output.Seek(0, io.SeekStart)
-		//b2, err := output.WriteAt(string_val, sp2 * pad_len)
-		//b2, err := output.WriteAt(string_val, (sp2 * pad_len) + pad_len)
 		b2, err := output.WriteAt(string_val, (sp2 * pad_len))
 		_ = b2
 		
@@ -337,7 +339,6 @@ func pariwise_to_matrix(input_file string, output_file string) {
 	*/
 	sorted_keys, longest_val := unique_values(input_file)
 	key_positions := map[string]int{}
-	//longest_in := fmt.Sprintf("Longest key: %d", longest_key)
 
 	vals := 0
 	for _, v := range *sorted_keys {

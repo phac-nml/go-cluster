@@ -21,6 +21,7 @@ For creating file in memory:
 	- if padding characters pose an issue they can be stripped in another pass of writing
 	- each line will have to be padded with a new line character
 
+TODO Create buffer for to contain sorted writes 
 TODO write to array in parallel, then sort to create sequential writes to a file
 	- This is currently no in parallel, but a buffer can be written to sorting writes output writes
 

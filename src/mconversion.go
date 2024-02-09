@@ -64,7 +64,7 @@ const (
 )
 
 func open_file(file_path string, open_type int) *os.File {
-	file, err := os.OpenFile(file_path, int(open_type), 0555)
+	file, err := os.OpenFile(file_path, int(open_type), 0666)
 	if err != nil {
 		if os.IsNotExist(err) && open_type == os.O_WRONLY {
 			_, err := os.Create(file_path)
@@ -109,7 +109,7 @@ func get_keys(value *map[string]bool) (*[]string, int ){
 
 
 
-func unique_values(file_path string) (*[]string, int, int) {
+func unique_values(file_path string) (*[]string, int) {
 	set := map[string]bool{}
 	file := open_file(file_path, os.O_RDONLY)
 	reader := bufio.NewReader(io.Reader(file))
@@ -131,7 +131,10 @@ func unique_values(file_path string) (*[]string, int, int) {
 	}
 	defer file.Close()
 	sorted_keys, longest_key := get_keys(&set)
-	return sorted_keys, longest_val, longest_key
+	if longest_key > longest_val {
+		return sorted_keys, longest_key
+	}
+	return sorted_keys, longest_val
 	
 }
 
@@ -159,6 +162,7 @@ func make_mask(modulus int) []byte {
 	return mask
 }
 
+
 func write_matrix(input_path string, output_path string, positions *map[string]int, longest_val int){
 
 	// input data fields
@@ -169,11 +173,14 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	output := open_file(output_path, os.O_WRONLY | os.O_CREATE) // making this a buffered output may be easier
 
 	// columns size
-	modulus := len(*positions)
+	//modulus := len(*positions) + 1// increase length by one to include data name row
+	modulus := len(*positions) + 1 // increase length by one to include data name row
 	modulus_64 := int64(modulus)
 
 	mask := make_mask(longest_val)
 	pad_len := int64(len(mask))
+
+
 	rows := modulus_64
 	for{
 		rl, err := reader.ReadString('\n')
@@ -188,22 +195,70 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		string_val := pad_value(string_val_up, mask)
 		
 		// Id locations
-		p1 := (*positions)[data[profile_1_pos]]
-		p2 := (*positions)[data[profile_2_pos]]
+		//p1 := (*positions)[data[profile_1_pos]]
+		//p2 := (*positions)[data[profile_2_pos]]
+
+		p1 := (*positions)[data[profile_1_pos]] + 1
+		p2 := (*positions)[data[profile_2_pos]] + 1
+
+		
 		sp1 := calculate_buffer_position(p1, p2, modulus)
 		sp2 := calculate_buffer_position(p2, p1, modulus)
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Trying to output the profile name in the right spot
+		// Seems to be putting data in the correct spots for each row
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		output.Seek(0, io.SeekStart)
+		profile_1_name := pad_value(data[profile_1_pos], mask)
+		name_out, err := output.WriteAt(profile_1_name, int64(p1) * modulus_64 * pad_len)
+		_ = name_out
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		// === column 1 position
+		output.Seek(0, io.SeekStart)
+		name_out, err = output.WriteAt(profile_1_name, int64(p1) * pad_len) // column position
+		_ = name_out
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		output.Seek(0, io.SeekStart)
+		profile_2_name := pad_value(data[profile_2_pos], mask)
+		name_out, err = output.WriteAt(profile_2_name, int64(p2) * modulus_64 * pad_len)
+		_ = name_out
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// column 2 position
+		output.Seek(0, io.SeekStart)
+		name_out, err = output.WriteAt(profile_2_name, int64(p2) * pad_len)
+		_ = name_out
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		
 		// Write at offsets
 		output.Seek(0, io.SeekStart)
-		b1, err := output.WriteAt(string_val, sp1 * pad_len)
+		// * name pad_len should only be applied to one value, this will differ for the top row
+		//b1, err := output.WriteAt(string_val, sp1 * pad_len)
+		//b1, err := output.WriteAt(string_val, (sp1 * pad_len) + pad_len) // increasing by one pad for label name
+		b1, err := output.WriteAt(string_val, (sp1 * pad_len)) // increasing by one pad for label name
 		_ = b1
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		output.Seek(0, io.SeekStart)
-		b2, err := output.WriteAt(string_val, sp2 * pad_len)
+		//b2, err := output.WriteAt(string_val, sp2 * pad_len)
+		//b2, err := output.WriteAt(string_val, (sp2 * pad_len) + pad_len)
+		b2, err := output.WriteAt(string_val, (sp2 * pad_len))
 		_ = b2
 		
 		if err != nil {
@@ -211,10 +266,18 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		}
 	}
 
-	// Replace tabs with new line characters in output file
-	newline := []byte("\n")
+	// Add byte mask to start of file, to prevent binary inclusion
 	output.Seek(0, io.SeekStart)
-	fmt.Fprintf(os.Stderr, "Adding new line characters to reformatted matrix.\n")
+	_, err := output.WriteAt(mask, 0)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+	// Replace tabs with new line characters in output file
+	output.Seek(0, io.SeekStart)
+	log.Println("Adding new line characters to reformatted matrix.")
+	newline := []byte("\n")
 	for i := modulus_64; i < modulus_64 * modulus_64; i = i + modulus_64 {
 		b, err := output.WriteAt(newline, (i * pad_len) - 1)
 		_ = b
@@ -223,42 +286,17 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "Rows: %d\n", rows)
+	row_count_str := fmt.Sprintf("Rows output: %d", rows)
+	log.Println(row_count_str)
+
 	defer file.Close()
 	defer output.Close()
-
-}
-
-func get_matrix_values(file_path string, positions *map[string]int, buffer *[]int){
-	file := open_file(file_path, os.O_RDONLY)
-	reader := bufio.NewReader(io.Reader(file))
-	modulus := len(*positions)
-	for {
-		rl, err := reader.ReadString('\n')
-		if err != nil {
-			break
-		}
-		data := strings.Split(rl, " ")
-		string_val := data[comparison_pos]
-		string_val = string_val[:len(string_val)-1] // drop new line character
-		
-		// Id locations
-		p1 := (*positions)[data[profile_1_pos]]
-		p2 := (*positions)[data[profile_2_pos]]
-
-		int_val := parse_int(string_val)
-		sp1 := calculate_buffer_position(p1, p2, modulus)
-		sp2 := calculate_buffer_position(p2, p1, modulus)
-		(*buffer)[sp1] = int_val
-		(*buffer)[sp2] = int_val
-
-	}
-	defer file.Close()
 }
 
 
 func calculate_buffer_size(key_len int) int{
 	size := key_len * key_len
+	// TODO need to incorporate the profile name in this output
 	return size
 }
 
@@ -270,6 +308,7 @@ func calculate_buffer_position(p1 int, p2 int, modulus int) int64 {
 	e.g. to get rows (p1) * modulus + p2 (columns) and flip the location for the other value
 	*/
 	//fmt.Fprintf(os.Stdout, "%d %d\n", p1, p2)
+	// TODO need to incorporate the profile name in this output
 	return int64((p1 * modulus) + p2)
 }
 
@@ -295,11 +334,9 @@ func pariwise_to_matrix(input_file string, output_file string) {
 	TODO need to include sample names when reading them in to add to annotate the matrix
 	
 	*/
-	sorted_keys, longest_val, longest_key := unique_values(input_file)
+	sorted_keys, longest_val := unique_values(input_file)
 	key_positions := map[string]int{}
-	longest_in := fmt.Sprintf("Longest key: %d", longest_key)
-	
-	log.Println(longest_in)
+	//longest_in := fmt.Sprintf("Longest key: %d", longest_key)
 
 	vals := 0
 	for _, v := range *sorted_keys {
@@ -309,8 +346,7 @@ func pariwise_to_matrix(input_file string, output_file string) {
 
 	var output string = output_file
 	write_matrix(input_file, output, &key_positions, longest_val)
-
-	log.Println("Done", longest_val)
+	log.Println("Done")
 
 }
 

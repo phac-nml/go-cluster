@@ -3,6 +3,8 @@
 To supply different return types a type and an interface may need to be added, as unions are not an option in go
 TODO offer int or float return
 
+TODO treating missing alleles (zeroes) as missing should be optional
+
 Matthew Wells: 2024-04-06
 */
 

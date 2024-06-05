@@ -7,20 +7,6 @@ import (
 	"io"
 )
 
-func hamming_dist(d1 *[]int, d2 *[]int) int {
-	var diffs int = 0
-	for g := range *d1 {
-		if (*d1)[g] == (*d2)[g] {
-			diffs++
-		}
-	}
-	//if diffs == int(len(*d1)) {
-	//	fmt.Fprintf(os.Stderr, "--%d\n%d\n--", *d1, *d2)
-	//}
-	return diffs
-}
-
-
 
 var CPU_LOAD_FACTOR = 10
 var INPUT_PROFILE string = ""

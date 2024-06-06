@@ -9,6 +9,8 @@ import (
 
 
 var CPU_LOAD_FACTOR int = 10
+var COLUMN_DELIMITER = "\t"
+var MISSING_ALLELE_STRING = "0"
 var INPUT_PROFILE string = ""
 var MOLTEN_FILE string = ""
 var OUTPUT_FILE string = ""
@@ -16,7 +18,6 @@ var BUFFER_SIZE int = 16384 // 3 times bigger then 4096
 
 func main() {
 	cli()
-
 	if MOLTEN_FILE != "" && OUTPUT_FILE != "" {
 		pariwise_to_matrix(MOLTEN_FILE, OUTPUT_FILE)
 		os.Exit(0)

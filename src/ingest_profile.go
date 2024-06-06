@@ -12,7 +12,6 @@ import (
 	"log"
 	"bufio"
 	"strings"
-	"strconv"
 )
 
 type Profile struct {
@@ -30,50 +29,67 @@ func _create_scanner(file_path string) (*bufio.Scanner, *os.File) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//defer file.Close()
+
 	scanner := bufio.NewScanner(file) // ! Caps out at 64k line
 	return scanner, file
 }
 
 
+func initialize_lookup(scanner *bufio.Scanner, new_line_char string, line_delimiter string) *[]*ProfileLookup {
+	first_line := scanner.Scan();
+	if !first_line {
+		log.Fatal("Input File appears to be empty.");
+		os.Exit(1);
+	}
+
+	split_line := strings.Split(strings.TrimSuffix(scanner.Text(), new_line_char), line_delimiter);
+	new_array := make([]*ProfileLookup, len(split_line))
+	for idx, _ := range new_array {
+		new_array[idx] = NewProfile();
+	}
+	return &new_array;
+}
+
 func load_profile(file_path string) *[]*Profile {
-	/*Split a tab delimited profile and convert it into allelic profile
+	/*
+		Split a tab delimited profile and convert it into allelic profile
 	*/
 	const new_line_char = "\n"
-	const line_delimiter = "\t"
-	numeric_base := 10 // could be 16 for hex
+	line_delimiter := COLUMN_DELIMITER;
 	file_scanner, file := _create_scanner(file_path)
 	defer file.Close()
 	var data []*Profile
-	// TODO empty/missing allele characters should be passed in from the CLI with a default
-
-
+	log.Println("Ingesting profile and normalizing allele inputs.");
+	const missing_allele_value int = 0;
+	var missing_value string = MISSING_ALLELE_STRING;
+	// TODO verify that Scan moves file pointer up
+	normalization_lookup := initialize_lookup(file_scanner, new_line_char, line_delimiter);
 	for file_scanner.Scan() {
 		input_text := strings.Split(strings.TrimSuffix(file_scanner.Text(), new_line_char), line_delimiter)
 
 
 		data_in := make([]int, len(input_text) - 1) // Create an array to populate
 
-		for f, x := range input_text[1:len(input_text)] { // may require offset by -1
-			// TODO convert this to a function to look up strings in trie
-			// ? Can probably just call everything a base 64 to handle strings
-			i, err := strconv.ParseInt(x, numeric_base, 64) // Converts integer in, to base 10 64bit number TODO may need to handle hex values for hashes
-			if err != nil {
-				// TODO trigger clean up here
-				log.Println("Improperly formatted allele: " + string(x), err)
-				i = 0 // overwrite bad code with allele profile of 0
+		for f, x := range input_text[1:len(input_text)] { // starting at position 1 as first value is the sample ID
+
+			if missing_value != x {
+				data_in[f] = (*normalization_lookup)[f].InsertValue(&x);
+			}else{
+				data_in[f] = missing_allele_value;
 			}
-			data_in[f] = int(i)
+			
 		}
-		//data = append(data, &data_in)// pop data back array
+	
 		new_profile := newProfile(input_text[0], &data_in)
 		data = append(data, new_profile)// pop data back array
 	}
 
+	normalization_lookup = nil // Flag objects for GC
 	if err := file_scanner.Err(); err != nil {
-		log.Fatal(err)
-		os.Exit(5)
+		log.Fatal(err);
+		os.Exit(5);
 	}
+	log.Println("Finished ingesting profile.");
 
 	return &data
 

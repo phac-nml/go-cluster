@@ -27,14 +27,16 @@ func cli() {
 
 	buffer_help := fmt.Sprintf("The default buffer size is: %d. Larger buffers may increase performance.", BUFFER_SIZE)
 
-	flag.StringVar(&INPUT_PROFILE, "profile", "", "File path to your alleles profiles.")
+	flag.StringVar(&INPUT_PROFILE, "profile", INPUT_PROFILE, "File path to your alleles profiles.")
 	flag.IntVar(&CPU_LOAD_FACTOR, "load-factor", CPU_LOAD_FACTOR, 
 	`Used to set the minimum number of values needed to use 
 multi-threading. e.g. if (number of cpus * load factor) > number of table rows. Only a single thread will be used. `)
 	flag.IntVar(&DIST_FUNC, "distance", 0, distance_func_help)
-	flag.StringVar(&MOLTEN_FILE, "molten", "", "File path to a previously generated output for conversion into a distance matrix.")
-	flag.StringVar(&OUTPUT_FILE, "output", "", "Name of output file.")
+	flag.StringVar(&MOLTEN_FILE, "molten", MOLTEN_FILE, "File path to a previously generated output for conversion into a distance matrix.")
+	flag.StringVar(&OUTPUT_FILE, "output", OUTPUT_FILE, "Name of output file.")
 	flag.IntVar(&BUFFER_SIZE, "buffer-size", BUFFER_SIZE, buffer_help)
+	flag.StringVar(&COLUMN_DELIMITER, "column-delimiter", COLUMN_DELIMITER, "Column delimiter")
+	flag.StringVar(&MISSING_ALLELE_STRING, "missing-allele-character", MISSING_ALLELE_STRING, "String denoting missing alleles.")
 	
 	flag.Parse()
 	if len(os.Args) == 1 {

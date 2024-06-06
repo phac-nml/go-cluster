@@ -8,11 +8,11 @@ import (
 )
 
 
-var CPU_LOAD_FACTOR = 10
+var CPU_LOAD_FACTOR int = 10
 var INPUT_PROFILE string = ""
 var MOLTEN_FILE string = ""
 var OUTPUT_FILE string = ""
-var BUFFER_SIZE = 16384 // 3 times bigger then 4096
+var BUFFER_SIZE int = 16384 // 3 times bigger then 4096
 
 func main() {
 	cli()

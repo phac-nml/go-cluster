@@ -30,13 +30,12 @@ func cli() {
 	flag.StringVar(&INPUT_PROFILE, "profile", "", "File path to your alleles profiles.")
 	flag.IntVar(&CPU_LOAD_FACTOR, "load-factor", CPU_LOAD_FACTOR, 
 	`Used to set the minimum number of values needed to use 
-multi-threading. e.g. load-factor * available cpus = minimum number of profiles required for multithreading.
-It is best to use the default value which indicates that you have more rows of data then CPUs on your computer.`)
+multi-threading. e.g. if (number of cpus * load factor) > number of table rows. Only a single thread will be used. `)
 	flag.IntVar(&DIST_FUNC, "distance", 0, distance_func_help)
 	flag.StringVar(&MOLTEN_FILE, "molten", "", "File path to a previously generated output for conversion into a distance matrix.")
 	flag.StringVar(&OUTPUT_FILE, "output", "", "Name of output file.")
 	flag.IntVar(&BUFFER_SIZE, "buffer-size", BUFFER_SIZE, buffer_help)
-
+	
 	flag.Parse()
 	if len(os.Args) == 1 {
 		flag.PrintDefaults()

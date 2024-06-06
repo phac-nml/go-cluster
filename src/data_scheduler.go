@@ -22,19 +22,17 @@ type OutputValue struct {
 	distance float64
 }
 
-func calculate_bucket_size(data_length int) int {
-	runtime_cpus := runtime.NumCPU()
+func calculate_bucket_size(data_length int, runtime_cpus int) int {
 	bucket_size := data_length / (runtime_cpus * 2)
 	return bucket_size
 }
 
 func buckets_indices(data_length int, bucket_size int) [][]int {
 	var bucks [][]int
-	//cpu_load_factor := 10
 	cpu_load_factor := CPU_LOAD_FACTOR // Need to add description to global options
 	window := bucket_size
 
-	cpu_load_string := fmt.Sprintf("CPU load factor x%d", CPU_LOAD_FACTOR)
+	cpu_load_string := fmt.Sprintf("CPU load factor x%d", cpu_load_factor)
 	log.Println(cpu_load_string)
 	
 	if window > data_length {
@@ -123,7 +121,7 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 	bucket_index := 0
 	empty_array := make([]int, 1)
 	empty_name := ""
-	bucket_size := calculate_bucket_size(len(data))
+	bucket_size := calculate_bucket_size(len(data), runtime.NumCPU())
 	buckets := buckets_indices(len(data), bucket_size)
 	arr_pos := 1
 

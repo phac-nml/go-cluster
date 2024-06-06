@@ -39,12 +39,13 @@ func _create_scanner(file_path string) (*bufio.Scanner, *os.File) {
 func load_profile(file_path string) *[]*Profile {
 	/*Split a tab delimited profile and convert it into allelic profile
 	*/
-	new_line_char := "\n"
-	line_delimiter := "\t"
+	const new_line_char := "\n"
+	const line_delimiter := "\t"
 	numeric_base := 10 // could be 16 for hex
 	file_scanner, file := _create_scanner(file_path)
 	defer file.Close()
 	var data []*Profile
+	// TODO empty/missing allele characters should be passed in from the CLI with a default
 
 
 	for file_scanner.Scan() {

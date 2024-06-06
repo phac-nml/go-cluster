@@ -41,5 +41,4 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	//fmt.Printf("File: %s", INPUT_PROFILE)
 }

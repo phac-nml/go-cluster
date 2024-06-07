@@ -23,7 +23,8 @@ type OutputValue struct {
 }
 
 func calculate_bucket_size(data_length int, runtime_cpus int) int {
-	bucket_size := data_length / (runtime_cpus * 2)
+	//bucket_size := data_length / (runtime_cpus * 2)
+	bucket_size := data_length / runtime_cpus
 	return bucket_size
 }
 
@@ -65,7 +66,7 @@ func buckets_indices(data_length int, bucket_size int) [][]int {
 	x[1] = data_length
 	bucks = append(bucks, x)
 	
-	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks))
+	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks) - 1)
 	log.Println(threads_running)
 	profiles_to_thread := fmt.Sprintf("Allocating ~%d profiles per a thread.", window)
 	log.Println(profiles_to_thread)

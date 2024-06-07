@@ -126,6 +126,8 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 	buckets := buckets_indices(len(data), bucket_size)
 	arr_pos := 1
 
+	// TODO can create a pool of go routines and pass the profile to compare to each channel
+
 	for g := range data[0:] {
 		var wg sync.WaitGroup
 		profile_comp := data[g] // copy struct for each thread

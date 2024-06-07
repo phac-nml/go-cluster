@@ -348,7 +348,6 @@ func pariwise_to_matrix(input_file string, output_file string) {
 
 	var output string = output_file
 	write_matrix(input_file, output, &key_positions, longest_val)
-	log.Println("Done")
 
 }
 

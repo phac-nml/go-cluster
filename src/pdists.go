@@ -64,6 +64,8 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 
 
 	fast_match = flaggy.NewSubcommand("fast-match")
+	// TODO this should be limited with a threading option
+	fast_match.Description = "Tabulate distances between a query profile and reference profiles. Only distances exceeding a threshold will be kept."
 	fast_match.String(&INPUT_PROFILE, "i", "input", "File path to profiles for querying.")
 	fast_match.String(&REFERENCE_PROFILES, "r", "reference", "File path to reference profiles to query against.")
 	fast_match.String(&COLUMN_DELIMITER, "c", "column-delimiter", "Column delimiter")

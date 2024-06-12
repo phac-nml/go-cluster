@@ -53,40 +53,45 @@ func load_profile(file_path string) *[]*Profile {
 	/*
 		Split a tab delimited profile and convert it into allelic profile
 	*/
-	const new_line_char = "\n";
-	line_delimiter := COLUMN_DELIMITER;;
+	new_line_char := NEWLINE_CHARACTER;
+	line_delimiter := COLUMN_DELIMITER;
 	file_scanner, file := _create_scanner(file_path);
 	defer file.Close();
 	//var data []*Profile;
 	log.Println("Ingesting profile and normalizing allele inputs.");
-	
 	var missing_value string = MISSING_ALLELE_STRING;
 	// TODO verify that Scan moves file pointer up
 	normalization_lookup := initialize_lookup(file_scanner, new_line_char, line_delimiter);
 	data := create_profiles(file_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value);
-	//for file_scanner.Scan() {
-	//	input_text := *split_line(file_scanner.Text(), new_line_char, line_delimiter);
-	//	data_in := make([]int, len(input_text) - 1) // Create an array to populate
-	//	for f, x := range input_text[1:len(input_text)] { // starting at position 1 as first value is the sample ID
-	//		if missing_value != x {
-	//			data_in[f] = (*normalization_lookup)[f].InsertValue(&x);
-	//		}else{
-	//			data_in[f] = missing_allele_value;
-	//		}
-	//		
-	//	}
-	//	new_profile := newProfile(input_text[0], &data_in);
-	//	data = append(data, new_profile); // pop data back array
-	//}
-	//
-	//if err := file_scanner.Err(); err != nil {
-	//	log.Fatal(err);
-	//	os.Exit(5);
-	//}
+
 
 	normalization_lookup = nil // Flag objects for GC
 	log.Println("Finished ingesting profile.");
 
 	return data
+}
 
+func load_profiles(reference_profiles string, query_profiles string) (*[]*Profile, *[]*Profile) {
+	/*
+		reference_profiles string: Input profiles for query against with the reference profiles
+		query_profiles: Profiles to query against the references with
+	*/
+	var missing_value string = MISSING_ALLELE_STRING;
+	new_line_char := NEWLINE_CHARACTER;
+	line_delimiter := COLUMN_DELIMITER;
+	reference_scanner, ref_file := _create_scanner(reference_profiles);
+	query_scanner, query_file := _create_scanner(query_profiles);
+	defer ref_file.Close();
+	defer query_file.Close();
+
+	log.Println("Ingesting and normalizing reference profiles.")
+	normalization_lookup := initialize_lookup(reference_scanner, new_line_char, line_delimiter)
+	ref_data := create_profiles(reference_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
+
+	log.Println("Ingesting and normalizing query profiles.")
+	query_data := create_profiles(query_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
+
+	normalization_lookup = nil
+	log.Println("Finished ingesting and noramlizing profiles.")
+	return ref_data, query_data
 }

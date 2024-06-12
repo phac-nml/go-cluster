@@ -120,14 +120,12 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 	dist := distance_functions[DIST_FUNC].function // ! Default value is stored in the dists.go file
 
 	bucket_index := 0
-	empty_array := make([]int, 1)
 	empty_name := ""
 	bucket_size := calculate_bucket_size(len(data), runtime.NumCPU())
 	buckets := buckets_indices(len(data), bucket_size)
 	arr_pos := 1
 
 	// TODO can create a pool of go routines and pass the profile to compare to each channel
-
 	for g := range data[0:] {
 		var wg sync.WaitGroup
 		profile_comp := data[g] // copy struct for each thread
@@ -150,7 +148,7 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 
 		if len(buckets) > 1 && arr_pos % bucket_size == 0 {
 			for f := buckets[bucket_index][1] - bucket_size; f < buckets[bucket_index][1]; f++ {
-				data[f].profile = &empty_array;
+				data[f].profile = nil;
 				data[f].name = empty_name;
 				
 			}

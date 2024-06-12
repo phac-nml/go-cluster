@@ -8,50 +8,58 @@
 package main
 
 
-//import (
-//	"os"
-//	"log"
-//	_ "bufio"
-//	"strings"
-//)
+import (
+	"log"
+	"sort"
+	"sync"
+)
 
-//func load_profiles(profiles_path string, query_path string){
-//	const new_line_char = "\n"
-//	line_delimiter := COLUMN_DELIMITER;
-//	file_scanner, file := _create_scanner(file_path)
-//	defer file.Close()
-//	var data []*Profile
-//	log.Println("Ingesting profile and normalizing allele inputs.");
-//	const missing_allele_value int = 0;
-//	var missing_value string = MISSING_ALLELE_STRING;
-//	// TODO verify that Scan moves file pointer up
-//	normalization_lookup := initialize_lookup(file_scanner, new_line_char, line_delimiter);
-//	for file_scanner.Scan() {
-//		input_text := strings.Split(strings.TrimSuffix(file_scanner.Text(), new_line_char), line_delimiter)
-//
-//
-//		data_in := make([]int, len(input_text) - 1) // Create an array to populate
-//
-//		for f, x := range input_text[1:len(input_text)] { // starting at position 1 as first value is the sample ID
-//
-//			if missing_value != x {
-//				data_in[f] = (*normalization_lookup)[f].InsertValue(&x);
-//			}else{
-//				data_in[f] = missing_allele_value;
-//			}
-//			
-//		}
-//	
-//		new_profile := newProfile(input_text[0], &data_in)
-//		data = append(data, new_profile)// pop data back array
-//	}
-//
-//	normalization_lookup = nil // Flag objects for GC
-//	if err := file_scanner.Err(); err != nil {
-//		log.Fatal(err);
-//		os.Exit(5);
-//	}
-//	log.Println("Finished ingesting profile.");
-//
-//	return &data
-//}
+type FastMatch struct {
+	reference *string;
+	query *string;
+	distance float64;
+}
+
+func identify_matches(reference_profiles string, query_profiles string, match_threshold float64) {
+	/*
+		Fast match isolates
+		reference_profiles string: Input profiles for query against with the reference profiles
+		query_profiles string: Profiles to query against the references with
+		match_threshold uint: integer threshold to use in a match
+	*/
+	reference, query := load_profiles(reference_profiles, query_profiles)
+	var wg sync.WaitGroup
+	dist_function := distance_functions[DIST_FUNC].function
+	outputs := make(map[string][]*FastMatch, len(*query))
+	// TODO add threading limit
+	for _, profile := range *query {
+		outputs[profile.name] = make([]*FastMatch, 0, int(0.05 * float64(len(*reference)))) // Create capacity at 5% of reference values
+		log.Printf("Querying distances for %s", profile.name)
+		go get_distances(profile, reference, dist_function, match_threshold, outputs[profile.name], &wg)
+		wg.Add(1)
+	}
+	wg.Wait()
+
+}
+
+
+func get_distances(query_profile  *Profile, reference_profiles *[]*Profile, dist_fn func(*[]int, *[]int) float64, match_threshold float64, output_values []*FastMatch, wg *sync.WaitGroup) {
+	/*
+		Tabulate all distances for a profile
+	*/
+	
+	
+	for _, r_profile := range *reference_profiles {
+		output := dist_fn(query_profile.profile, r_profile.profile)
+		if output <= match_threshold {
+			output_values = append(output_values, &FastMatch{&r_profile.name, &query_profile.name, output})
+		}
+	}
+
+	sort.Slice(output_values, func(i, j int) bool {
+		return output_values[i].distance < output_values[j].distance
+	})
+	defer wg.Done()
+	
+
+}

@@ -122,6 +122,7 @@ func main() {
 			flaggy.ShowHelpAndExit("Distance function selected requires a value >1 for selection.")
 		}
 		var f *bufio.Writer
+		
 		if OUTPUT_FILE != "" {
 			file := open_file(OUTPUT_FILE, os.O_WRONLY)
 			defer file.Close()
@@ -130,6 +131,7 @@ func main() {
 			f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
 		}
 		identify_matches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, f)
+		defer f.Flush()
 		
 	}
 	

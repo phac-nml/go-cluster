@@ -21,6 +21,18 @@ func split_line(string_in string, new_line_char string, line_delimiter string) *
 }
 
 /*
+	get format output string
+*/
+func get_format_string() string {
+	var format_expression string = "%s %s %.2f\n";
+	if distance_functions[DIST_FUNC].truncate {
+		format_expression = "%s %s %.0f\n";
+	}
+	return format_expression
+}
+
+
+/*
 	Create profiles for data profiles
 */
 func create_profiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_line_char string, line_delimiter string, missing_value string) *[]*Profile {

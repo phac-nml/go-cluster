@@ -91,10 +91,7 @@ func thread_execution(data_slice *[]*Profile, waitgroup * sync.WaitGroup, profil
 	*/
 
 
-	var format_expression string = "%s %s %.2f\n";
-	if distance_functions[DIST_FUNC].truncate {
-		format_expression = "%s %s %.0f\n";
-	}
+	format_expression := get_format_string()
 
 	defer waitgroup.Done()
 	// TODO need to pass a slice properly in the future

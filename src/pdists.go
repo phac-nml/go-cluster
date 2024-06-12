@@ -72,6 +72,7 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	fast_match.String(&MISSING_ALLELE_STRING, "m", "missing-allele-character", "String denoting missing alleles.")
 	fast_match.Int(&DIST_FUNC, "d", "distance", distance_func_help)
 	fast_match.Float64(&MATCH_THRESHOLD, "t", "threshold", "Threshold for matching alleles.")
+	fast_match.String(&OUTPUT_FILE, "o", "output", "Name of output file. If nothing is specified results will be sent to stdout.")
 
 
 	flaggy.AttachSubcommand(distance_matrix, 1);
@@ -120,7 +121,15 @@ func main() {
 		if distance_functions[DIST_FUNC].assignment < 2 && MATCH_THRESHOLD < 1 {
 			flaggy.ShowHelpAndExit("Distance function selected requires a value >1 for selection.")
 		}
-		identify_matches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD)
+		var f *bufio.Writer
+		if OUTPUT_FILE != "" {
+			file := open_file(OUTPUT_FILE, os.O_WRONLY)
+			defer file.Close()
+			f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
+		}else{
+			f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
+		}
+		identify_matches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, f)
 		
 	}
 	

@@ -150,6 +150,7 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 		}
 		arr_pos++;
 	}
-	defer f.Flush();
+	wg.Wait()
+	f.Flush();
 }
 

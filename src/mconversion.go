@@ -71,8 +71,8 @@ func open_file(file_path string, open_type int) *os.File {
 			_, err := os.Create(file_path)
 			if err != nil {
 				log.Fatal(err)
-				file = open_file(file_path, open_type)
 			}
+			file = open_file(file_path, open_type)
 		}else{
 			log.Fatal(err)
 		}

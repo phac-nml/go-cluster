@@ -105,7 +105,7 @@ func main() {
 		}
 		run_data(&data, f);
 		log.Println("All threads depleted.")
-		defer f.Flush()
+		f.Flush()
 	}
 
 	if convert_matrix.Used {

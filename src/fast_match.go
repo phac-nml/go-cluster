@@ -90,6 +90,7 @@ func identify_matches(reference_profiles string, query_profiles string, match_th
 			fmt.Fprintf(output, format_string, *match.reference, *match.query, match.distance)
 		}
 	}
+	output.Flush()
 }
 
 

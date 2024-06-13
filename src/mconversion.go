@@ -39,7 +39,7 @@ A buffer can be written to in parallel then dumped to a file
 =============================================================================
 
 TODO this currently wont work as output format changed
-
+TODO The output of this adds a final tab charactar that needs to be removed.
 Matthew Wells: 2024-02-07
 */
 
@@ -62,6 +62,7 @@ const (
 	profile_1_pos = 0
 	profile_2_pos = 1
 	comparison_pos = 2
+	separator = '\t'
 )
 
 func open_file(file_path string, open_type int) *os.File {
@@ -159,7 +160,7 @@ func make_mask(modulus int) []byte {
 	for i := range mask {
 		mask[i] = ' '
 	}
-	mask[modulus] = '\t'
+	mask[modulus] = byte(COLUMN_DELIMITER[0]) // convert delimiter into byte string
 	return mask
 }
 

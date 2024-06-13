@@ -23,6 +23,7 @@ var BUFFER_SIZE int = 16384 // 3 times bigger then 4096
 var distance_matrix *flaggy.Subcommand
 var convert_matrix *flaggy.Subcommand
 var fast_match *flaggy.Subcommand
+var tree *flaggy.Subcommand
 const version string = "0.0.1"
 
 
@@ -76,8 +77,14 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	fast_match.String(&OUTPUT_FILE, "o", "output", "Name of output file. If nothing is specified results will be sent to stdout.")
 	fast_match.Int64(&FM_THREAD_LIMIT, "l", "goroutine-limit", thread_limit_help)
 
+	tree = flaggy.NewSubcommand("tree")
+	tree.String(&INPUT_PROFILE, "i", "input", "File path to previously generate distance matrix.")
+	tree.String(&OUTPUT_FILE, "o", "output", "Name of output file. If nothing is specified results will be sent to stdout.")
+	
+	
 	flaggy.AttachSubcommand(distance_matrix, 1);
 	flaggy.AttachSubcommand(convert_matrix, 1);
+	flaggy.AttachSubcommand(tree, 1);
 	flaggy.AttachSubcommand(fast_match, 1);
 	flaggy.Parse()
 
@@ -134,6 +141,26 @@ func main() {
 		identify_matches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, f)
 		defer f.Flush()
 		
+	}
+
+	if tree.Used {
+		if len(os.Args) <= 2 {
+			flaggy.ShowHelpAndExit("No commands selected.");
+		}
+		if INPUT_PROFILE == "" {
+			flaggy.ShowHelpAndExit("No input file selected");
+		}
+		var f *bufio.Writer
+		if OUTPUT_FILE != "" {
+			file := open_file(OUTPUT_FILE, os.O_WRONLY)
+			defer file.Close()
+			f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
+		}else{
+			f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
+		}
+		// TODO should not be one in the future
+		cluster(INPUT_PROFILE, 1, f)
+		f.Flush()
 	}
 	
 	log.Println("Done")

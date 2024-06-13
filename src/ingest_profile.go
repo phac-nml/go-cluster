@@ -11,6 +11,8 @@ import (
 	"os"
 	"log"
 	"bufio"
+	"strconv"
+	"strings"
 )
 
 type Profile struct {
@@ -40,12 +42,12 @@ func initialize_lookup(scanner *bufio.Scanner, new_line_char string, line_delimi
 		log.Fatal("Input File appears to be empty.");
 	}
 
-	split_line := split_line(scanner.Text(), new_line_char, line_delimiter);
-	new_array := make([]*ProfileLookup, len(*split_line))
+	separated_line := split_line(scanner.Text(), new_line_char, line_delimiter);
+	new_array := make([]*ProfileLookup, len(*separated_line))
 	for idx, _ := range new_array {
 		new_array[idx] = NewProfile();
 	}
-	return &new_array, split_line;
+	return &new_array, separated_line;
 }
 
 func load_profile(file_path string) *[]*Profile {
@@ -120,4 +122,32 @@ func compare_profile_headers(query_headers *[]string, reference_headers *[]strin
 		}
 	} 
 
+}
+
+
+
+func ingest_matrix(input string) ([][]float64, []string) {
+	/*
+		file_path string: The file path to the distance matrix to generate
+	*/
+	scanner, _ := _create_scanner(input);
+	scanner.Scan() // Throw away first line
+	var matrix [][]float64
+	var ids []string
+	line := 0
+	for scanner.Scan() {
+		separated_line := *split_line(scanner.Text(), NEWLINE_CHARACTER, COLUMN_DELIMITER)
+		row := make([]float64, len(separated_line)-1) // Separated Line length includes column ID
+		ids = append(ids, separated_line[0])
+		for idx, value := range separated_line[1:] {
+			parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+			if err != nil {
+				log.Fatalf("Could not convert value %s into a float64 value. Did you use this program to generate your distance matrix? [Line: %d Column %d]", value, line, idx)
+			}
+			row[idx] = parsed
+		}
+		matrix = append(matrix, row)
+		line++
+	}
+	return matrix, ids
 }

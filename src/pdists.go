@@ -11,6 +11,7 @@ import (
 
 
 var CPU_LOAD_FACTOR int = 100
+var FM_THREAD_LIMIT int64 = 100
 var COLUMN_DELIMITER = "\t"
 var NEWLINE_CHARACTER = "\n"
 var MISSING_ALLELE_STRING = "0"
@@ -64,8 +65,8 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 
 
 	fast_match = flaggy.NewSubcommand("fast-match")
-	// TODO this should be limited with a threading option
 	fast_match.Description = "Tabulate distances between a query profile and reference profiles. Only distances exceeding a threshold will be kept."
+	thread_limit_help := fmt.Sprintf("Limit the number of goroutines run at one time. Default: %d", FM_THREAD_LIMIT)
 	fast_match.String(&INPUT_PROFILE, "i", "input", "File path to profiles for querying.")
 	fast_match.String(&REFERENCE_PROFILES, "r", "reference", "File path to reference profiles to query against.")
 	fast_match.String(&COLUMN_DELIMITER, "c", "column-delimiter", "Column delimiter")
@@ -73,7 +74,7 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	fast_match.Int(&DIST_FUNC, "d", "distance", distance_func_help)
 	fast_match.Float64(&MATCH_THRESHOLD, "t", "threshold", "Threshold for matching alleles.")
 	fast_match.String(&OUTPUT_FILE, "o", "output", "Name of output file. If nothing is specified results will be sent to stdout.")
-
+	fast_match.Int64(&FM_THREAD_LIMIT, "l", "goroutine-limit", thread_limit_help)
 
 	flaggy.AttachSubcommand(distance_matrix, 1);
 	flaggy.AttachSubcommand(convert_matrix, 1);

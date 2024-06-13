@@ -7,7 +7,6 @@ package main
 import (
 	"strings"
 	"log"
-	"os"
 	"bufio"
 )
 
@@ -55,7 +54,6 @@ func create_profiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_
 
 	if err := file_scanner.Err(); err != nil {
 		log.Fatal(err);
-		os.Exit(5);
 	}
 	log.Printf("Data contains: %d profiles.", len(data))
 	return &data;

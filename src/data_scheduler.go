@@ -28,8 +28,12 @@ func calculate_bucket_size(data_length int, runtime_cpus int) int {
 	return bucket_size
 }
 
-func buckets_indices(data_length int, bucket_size int) [][]int {
-	var bucks [][]int
+type Bucket struct {
+	start, end int
+}
+
+func buckets_indices(data_length int, bucket_size int) []Bucket {
+	var bucks []Bucket
 	cpu_load_factor := CPU_LOAD_FACTOR // Need to add description to global options
 	window := bucket_size
 
@@ -37,40 +41,27 @@ func buckets_indices(data_length int, bucket_size int) [][]int {
 	log.Println(cpu_load_string)
 	
 	if window > data_length {
-		x := make([]int, 2)
-		x[0] = 0
-		x[1] = data_length
-		bucks = append(bucks, x)
+		bucks = append(bucks, Bucket{0, data_length})
 		log.Println("Running single threaded as there are too few entries to justify multithreading.")
 		return bucks
 	}
 	
 	if data_length < (runtime.NumCPU() * cpu_load_factor) {
-		x := make([]int, 2)
-		x[0] = 0
-		x[1] = data_length
-		bucks = append(bucks, x)
+		bucks = append(bucks, Bucket{0, data_length})
 		log.Println("Running single threaded as there are too few entries to justify multithreading.")
 		return bucks
 	}
 
 	for i := window; i < data_length; i = i + window {
-		x := make([]int, 2)
-		x[0] = i - window
-		x[1] = i
-		bucks = append(bucks, x)
+		bucks = append(bucks, Bucket{i - window, i})
 	}
-	
-	x := make([]int, 2)
-	x[0] = bucks[len(bucks) - 1][1] 
-	x[1] = data_length
-	bucks = append(bucks, x)
+
+	bucks = append(bucks, Bucket{bucks[len(bucks) - 1].end, data_length})
 	
 	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks) - 1)
 	log.Println(threads_running)
 	profiles_to_thread := fmt.Sprintf("Allocating ~%d profiles per a thread.", window)
 	log.Println(profiles_to_thread)
-	//log.Println(bucks)
 	return bucks
 }
 
@@ -78,7 +69,7 @@ func buckets_indices(data_length int, bucket_size int) [][]int {
 
 
 
-func thread_execution(data_slice *[]*Profile, profile_compare *Profile, start_idx int, end_idx int, dist_fn func(*[]int, *[]int) float64, array_writes *[]*string){
+func thread_execution(data_slice *[]*Profile, profile_compare *Profile, bucket Bucket, dist_fn func(*[]int, *[]int) float64, array_writes *[]*string) {
 	/* Compute profile differences.
 	
 	data_slice: the data range to use for calculation against the profile to be compared too.
@@ -93,13 +84,12 @@ func thread_execution(data_slice *[]*Profile, profile_compare *Profile, start_id
 	format_expression := get_format_string()
 
 	// TODO need to pass a slice properly in the future
-	for i := start_idx; i < end_idx; i++ {
+	for i := bucket.start; i < bucket.end; i++ {
 		x := dist_fn((*data_slice)[i].profile, profile_compare.profile);
 
 		output := fmt.Sprintf(format_expression, profile_compare.name, (*data_slice)[i].name, x);
-		(*array_writes)[i-start_idx] = &output;
+		(*array_writes)[i-bucket.start] = &output;
 	}
-	
 }
 
 
@@ -121,22 +111,24 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 	arr_pos := 1
 
 	// TODO can create a pool of go routines and pass the profile to compare to each channel
+	var wg sync.WaitGroup
 	for g := range data[0:] {
-		var wg sync.WaitGroup
 		profile_comp := data[g] // copy struct for each thread
 		values_write := make([]*[]*string, len(buckets) - bucket_index)
 		// TODO an incredible optimization here would be to go lockless, or re-use threads
 		for i := bucket_index; i < len(buckets); i++ {
-			array_writes := make([]*string, buckets[i][1] - buckets[i][0])
-			go func(){
-				wg.Add(1)
-				thread_execution(&data, profile_comp, buckets[i][0], buckets[i][1], dist, &array_writes)
-				defer wg.Done()
-			}()
+			
+			array_writes := make([]*string, buckets[i].end - buckets[i].start)
 			values_write[i - bucket_index] = &array_writes
+			buckets := buckets[i]
+			wg.Add(1)
+			go func(){
+				thread_execution(&data, profile_comp, buckets, dist, &array_writes)
+				wg.Done()
+			}()
 		}
 		wg.Wait() // Wait for everyone to catch up
-		buckets[bucket_index][0]++ // update the current buckets tracker
+		buckets[bucket_index].start++ // update the current buckets tracker
 		
 		for _, i := range values_write {
 			for _, value := range *i {
@@ -145,7 +137,7 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 		}
 
 		if len(buckets) > 1 && arr_pos % bucket_size == 0 {
-			for f := buckets[bucket_index][1] - bucket_size; f < buckets[bucket_index][1]; f++ {
+			for f := buckets[bucket_index].end - bucket_size; f < buckets[bucket_index].end; f++ {
 				data[f].profile = nil;
 				data[f].name = empty_name;
 				

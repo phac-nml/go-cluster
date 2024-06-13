@@ -78,11 +78,10 @@ func buckets_indices(data_length int, bucket_size int) [][]int {
 
 
 
-func thread_execution(data_slice *[]*Profile, waitgroup * sync.WaitGroup, profile_compare *Profile, start_idx int, end_idx int, dist_fn func(*[]int, *[]int) float64, array_writes *[]*string){
+func thread_execution(data_slice *[]*Profile, profile_compare *Profile, start_idx int, end_idx int, dist_fn func(*[]int, *[]int) float64, array_writes *[]*string){
 	/* Compute profile differences.
 	
 	data_slice: the data range to use for calculation against the profile to be compared too.
-	waitgroup: waitgroup for the go routine to be a part of
 	profile_compare: the profile being compared in all threads
 	start_idx: The starting range in the profile to be used to initilize comparisons
 	end_idx: The end range to calculate comparisons up too.
@@ -93,7 +92,6 @@ func thread_execution(data_slice *[]*Profile, waitgroup * sync.WaitGroup, profil
 
 	format_expression := get_format_string()
 
-	defer waitgroup.Done()
 	// TODO need to pass a slice properly in the future
 	for i := start_idx; i < end_idx; i++ {
 		x := dist_fn((*data_slice)[i].profile, profile_compare.profile);
@@ -129,9 +127,12 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 		values_write := make([]*[]*string, len(buckets) - bucket_index)
 		// TODO an incredible optimization here would be to go lockless, or re-use threads
 		for i := bucket_index; i < len(buckets); i++ {
-			wg.Add(1)
 			array_writes := make([]*string, buckets[i][1] - buckets[i][0])
-			go thread_execution(&data, &wg, profile_comp, buckets[i][0], buckets[i][1], dist, &array_writes)
+			go func(){
+				wg.Add(1)
+				thread_execution(&data, profile_comp, buckets[i][0], buckets[i][1], dist, &array_writes)
+				defer wg.Done()
+			}()
 			values_write[i - bucket_index] = &array_writes
 		}
 		wg.Wait() // Wait for everyone to catch up

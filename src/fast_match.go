@@ -38,13 +38,16 @@ func identify_matches(reference_profiles string, query_profiles string, match_th
 		output_arr := make([]*FastMatch, 0, int(0.05 * float64(len(*reference)))) // Create capacity at 5% of reference values
 		outputs[idx] = &output_arr
 		log.Printf("Querying distances for %s", profile.name)
-		go get_distances(profile, reference, dist_function, match_threshold, &output_arr, &wg)
-		wg.Add(1)
+		go func() {
+			wg.Add(1)
+			get_distances(profile, reference, dist_function, match_threshold, &output_arr)
+			defer wg.Done()
+		}()
 	}
 	wg.Wait()
 
 	format_string := get_format_string()
-	// TODO need to add log message for if this is not in order
+	// TODO need to add log message for this as there could be no matches.
 	for _, matches := range outputs {
 		for _, match := range *matches {
 			fmt.Fprintf(output, format_string, *match.reference, *match.query, match.distance)
@@ -53,7 +56,7 @@ func identify_matches(reference_profiles string, query_profiles string, match_th
 }
 
 
-func get_distances(query_profile  *Profile, reference_profiles *[]*Profile, dist_fn func(*[]int, *[]int) float64, match_threshold float64, output_values *[]*FastMatch, wg *sync.WaitGroup) {
+func get_distances(query_profile  *Profile, reference_profiles *[]*Profile, dist_fn func(*[]int, *[]int) float64, match_threshold float64, output_values *[]*FastMatch) {
 	/*
 		Tabulate all distances for a profile
 	*/
@@ -68,7 +71,5 @@ func get_distances(query_profile  *Profile, reference_profiles *[]*Profile, dist
 	sort.Slice(*output_values, func(i, j int) bool {
 		return (*output_values)[i].distance < (*output_values)[j].distance
 	})
-	defer wg.Done()
-	
 
 }

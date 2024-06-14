@@ -22,9 +22,11 @@ type OutputValue struct {
 	distance float64
 }
 
-func calculate_bucket_size(data_length int, runtime_cpus int) int {
-	//bucket_size := data_length / (runtime_cpus * 2)
-	bucket_size := data_length / runtime_cpus
+func calculate_bucket_size(data_length int, runtime_cpus int, cpu_modifier int) int {
+	if cpu_modifier <= 0 {
+		log.Fatal("CPU modifier must be greater than 0")
+	}
+	bucket_size := data_length / (runtime_cpus * cpu_modifier)
 	return bucket_size
 }
 
@@ -102,11 +104,12 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 	start := time.Now()
 	data := *profile_data
 	
-	dist := distance_functions[DIST_FUNC].function // ! Default value is stored in the dists.go file
+	dist := distance_functions[DIST_FUNC].function
 
 	bucket_index := 0
 	empty_name := ""
-	bucket_size := calculate_bucket_size(len(data), runtime.NumCPU())
+	const cpu_modifier = 1
+	bucket_size := calculate_bucket_size(len(data), runtime.NumCPU(), cpu_modifier)
 	buckets := buckets_indices(len(data), bucket_size)
 	arr_pos := 1
 
@@ -117,7 +120,6 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 		values_write := make([]*[]*string, len(buckets) - bucket_index)
 		// TODO an incredible optimization here would be to go lockless, or re-use threads
 		for i := bucket_index; i < len(buckets); i++ {
-			
 			array_writes := make([]*string, buckets[i].end - buckets[i].start)
 			values_write[i - bucket_index] = &array_writes
 			wg.Add(1)

@@ -25,6 +25,24 @@ var median   LinkageMethod  = LinkageMethod{"median", 4}
 var single   LinkageMethod = LinkageMethod{"single", 5} 
 var ward     LinkageMethod =   LinkageMethod{"ward", 6}
 
+var LINKAGE_METHODS []LinkageMethod = []LinkageMethod{
+														average, 
+														centroid,
+														complete,
+														mcquitty,
+														median,
+														single,
+														ward}
+
+
+var linkage_methods_help string = func () string {
+	start_message := "Please enter an integer corresponding to one of the linkage method of your choice: "
+	for _, value := range LINKAGE_METHODS {
+		start_message += fmt.Sprintf("%s: %d ", value.identifier, value.match_value)
+	}
+	return start_message
+}()
+
 
 func get_linkage_method(value int) string {
 	var linkage_method LinkageMethod

@@ -8,7 +8,25 @@ import (
 	"strings"
 	"log"
 	"bufio"
+	"os"
+	"io"
 )
+
+/*
+	Create an output buffer for writing too
+*/
+func create_output_buffer(file_in string) *bufio.Writer {
+	var f *bufio.Writer
+	if file_in != "" {
+		file := open_file(OUTPUT_FILE, os.O_WRONLY)
+		defer file.Close()
+		f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
+	}else{
+		f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
+	}
+
+	return f
+}
 
 
 /*

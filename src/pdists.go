@@ -3,8 +3,6 @@ package main
 import (
 	"os"
 	"log"
-	"bufio"
-	"io"
 	"fmt"
 	"github.com/integrii/flaggy"
 )
@@ -20,6 +18,7 @@ var OUTPUT_FILE string = ""
 var REFERENCE_PROFILES string = ""
 var MATCH_THRESHOLD float64 = 10
 var BUFFER_SIZE int = 16384 // 3 times bigger then 4096
+var LINKAGE_METHOD int = 0
 var distance_matrix *flaggy.Subcommand
 var convert_matrix *flaggy.Subcommand
 var fast_match *flaggy.Subcommand
@@ -80,7 +79,7 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	tree = flaggy.NewSubcommand("tree")
 	tree.String(&INPUT_PROFILE, "i", "input", "File path to previously generate distance matrix.")
 	tree.String(&OUTPUT_FILE, "o", "output", "Name of output file. If nothing is specified results will be sent to stdout.")
-	
+	tree.Int(&LINKAGE_METHOD, "l", "linkage-method", linkage_methods_help)
 	
 	flaggy.AttachSubcommand(distance_matrix, 1);
 	flaggy.AttachSubcommand(convert_matrix, 1);
@@ -102,14 +101,7 @@ func main() {
 		}
 		data_ := load_profile(INPUT_PROFILE)
 		data := *data_
-		var f *bufio.Writer
-		if OUTPUT_FILE != "" {
-			file := open_file(OUTPUT_FILE, os.O_WRONLY)
-			defer file.Close()
-			f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
-		}else{
-			f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
-		}
+		f := create_output_buffer(OUTPUT_FILE)
 		run_data(&data, f);
 		log.Println("All threads depleted.")
 		f.Flush()
@@ -122,6 +114,7 @@ func main() {
 		pariwise_to_matrix(INPUT_PROFILE, OUTPUT_FILE)
 	}
 
+	
 	if fast_match.Used {
 		if len(os.Args) <= 2 {
 			flaggy.ShowHelpAndExit("No commands selected.");
@@ -129,15 +122,7 @@ func main() {
 		if distance_functions[DIST_FUNC].assignment < 2 && MATCH_THRESHOLD < 1 {
 			flaggy.ShowHelpAndExit("Distance function selected requires a value >1 for selection.")
 		}
-		var f *bufio.Writer
-		
-		if OUTPUT_FILE != "" {
-			file := open_file(OUTPUT_FILE, os.O_WRONLY)
-			defer file.Close()
-			f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
-		}else{
-			f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
-		}
+		f := create_output_buffer(OUTPUT_FILE)
 		identify_matches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, f)
 		defer f.Flush()
 		
@@ -150,16 +135,11 @@ func main() {
 		if INPUT_PROFILE == "" {
 			flaggy.ShowHelpAndExit("No input file selected");
 		}
-		var f *bufio.Writer
-		if OUTPUT_FILE != "" {
-			file := open_file(OUTPUT_FILE, os.O_WRONLY)
-			defer file.Close()
-			f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
-		}else{
-			f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
+		f := create_output_buffer(OUTPUT_FILE)
+		if LINKAGE_METHOD > LINKAGE_METHODS[len(LINKAGE_METHODS)-1].match_value || LINKAGE_METHOD < 0 {
+			flaggy.ShowHelpAndExit("Invalid linkage method selected.");
 		}
-		// TODO should not be one in the future
-		cluster(INPUT_PROFILE, 1, f)
+		cluster(INPUT_PROFILE, LINKAGE_METHOD, f)
 		f.Flush()
 	}
 	

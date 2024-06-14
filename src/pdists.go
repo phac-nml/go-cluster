@@ -1,3 +1,9 @@
+// Parallel Distances
+//
+// A utility for basic calculation of distances on allele profiles (in parallel), fast-matching, clustering 
+// and dendrogram generation
+//
+// This utility is still in development however.
 package main
 
 import (
@@ -93,6 +99,7 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 }
 
 func main() {
+	//	Parallel distances
 	cli()
 	if distance_matrix.Used {
 
@@ -114,7 +121,7 @@ func main() {
 		pariwise_to_matrix(INPUT_PROFILE, OUTPUT_FILE)
 	}
 
-	
+
 	if fast_match.Used {
 		if len(os.Args) <= 2 {
 			flaggy.ShowHelpAndExit("No commands selected.");

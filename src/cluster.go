@@ -84,5 +84,5 @@ func cluster(input_file string, linkage_value int, f *bufio.Writer) {
 		log.Fatal(err)
 	}
 	
-	fmt.Fprintf(f, "%s", newick.Newick)
+	fmt.Fprintf(f, "%s\n", newick.Newick)
 }

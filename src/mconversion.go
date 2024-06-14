@@ -290,8 +290,11 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		}
 	}
 
-	row_count_str := fmt.Sprintf("Rows output: %d", rows)
-	log.Println(row_count_str)
+	// Remove final tab character added
+	output.Seek(-1, io.SeekEnd)
+	output.Write([]byte{' '})
+
+	log.Printf("Rows output: %d", rows)
 
 	defer file.Close()
 	defer output.Close()
@@ -349,7 +352,6 @@ func pariwise_to_matrix(input_file string, output_file string) {
 
 	var output string = output_file
 	write_matrix(input_file, output, &key_positions, longest_val)
-
 }
 
 

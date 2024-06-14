@@ -1,10 +1,9 @@
-/* Data scheduler handing data slices to threads for resource handling.
-
-Only outputting pairwise comparisons, as a seperate program will convert the file into a matrix
-
-Matthew Wells:2024-02-07
-*/
-
+// Data Scheduler
+//
+// Data scheduler handing data slices to threads for resource handling.
+// Only outputting pairwise comparisons, as a separate program will convert the file into a matrix
+//
+// Matthew Wells:2024-02-07
 package main
 
 import (
@@ -16,6 +15,7 @@ import (
 	"bufio"
 )
 
+// Distance of two profiles
 type OutputValue struct {
 	profile_1 string
 	profile_2 string
@@ -68,20 +68,15 @@ func buckets_indices(data_length int, bucket_size int) []Bucket {
 }
 
 
-
-
-
+// Compute profile differences.
+//
+// data_slice: the data range to use for calculation against the profile to be compared too.
+// profile_compare: the profile being compared in all threads
+// start_idx: The starting range in the profile to be used to initilize comparisons
+// end_idx: The end range to calculate comparisons up too.
+// dist_fn: The distance function to use for calculation of differences. Takes pointer to two profile to compare and returns a float 64
+// array_writes: Array of values to append writes too
 func thread_execution(data_slice *[]*Profile, profile_compare *Profile, bucket Bucket, dist_fn func(*[]int, *[]int) float64, array_writes *[]*string) {
-	/* Compute profile differences.
-	
-	data_slice: the data range to use for calculation against the profile to be compared too.
-	profile_compare: the profile being compared in all threads
-	start_idx: The starting range in the profile to be used to initilize comparisons
-	end_idx: The end range to calculate comparisons up too.
-	dist_fn: The distance function to use for calculation of differences. Takes pointer to two profile to compare and returns a float 64
-	array_writes: Array of values to append writes too
-	*/
-
 
 	format_expression := get_format_string()
 

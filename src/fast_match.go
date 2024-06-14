@@ -66,10 +66,10 @@ func identify_matches(reference_profiles string, query_profiles string, match_th
 		profile_comp := profile
 		wg.Add(1)
 		log.Printf("Querying distances for %s", profile_comp.name)
-		go func() {
-			get_distances(profile_comp, reference, dist_function, match_threshold, &output_arr)
+		go func(profile_compare *Profile, output_array *[]*FastMatch) {
+			get_distances(profile_compare, reference, dist_function, match_threshold, output_array)
 			wg.Done()
-		}()
+		}(profile, &output_arr)
 
 		if wg.GetCount() == FM_THREAD_LIMIT {
 			log.Printf("Waiting for active threads to finish. %d", wg.GetCount())

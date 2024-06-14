@@ -120,12 +120,11 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 			
 			array_writes := make([]*string, buckets[i].end - buckets[i].start)
 			values_write[i - bucket_index] = &array_writes
-			buckets := buckets[i]
 			wg.Add(1)
-			go func(){
-				thread_execution(&data, profile_comp, buckets, dist, &array_writes)
+			go func(output_array *[]*string, bucket_compute Bucket, profile_compare *Profile){
+				thread_execution(&data, profile_compare, bucket_compute, dist, output_array)
 				wg.Done()
-			}()
+			}(&array_writes, buckets[i], profile_comp)
 		}
 		wg.Wait() // Wait for everyone to catch up
 		buckets[bucket_index].start++ // update the current buckets tracker

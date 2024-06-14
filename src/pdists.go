@@ -130,7 +130,7 @@ func main() {
 			flaggy.ShowHelpAndExit("Distance function selected requires a value >1 for selection.")
 		}
 		f := create_output_buffer(OUTPUT_FILE)
-		identify_matches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, f)
+		IdentifyMatches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, f)
 		defer f.Flush()
 		
 	}

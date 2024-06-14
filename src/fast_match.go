@@ -17,41 +17,42 @@ import (
 	"bufio"
 )
 
+// Struct of fastmatch outputs
 type FastMatch struct {
 	reference *string;
 	query *string;
 	distance float64;
 }
 
-/*
-	Waitgroup count struct and functions come from: https://stackoverflow.com/a/68995552
-*/
+
+// Waitgroup count struct and functions come from: https://stackoverflow.com/a/68995552
 type WaitGroupCount struct {
 	sync.WaitGroup
-	count int64
+	count int64 // Incremental counter for waitgroup limits
 }
 
+// Increase waitgroup count by 1 a given delta
 func (wg *WaitGroupCount) Add(delta int) {
     atomic.AddInt64(&wg.count, int64(delta))
     wg.WaitGroup.Add(delta)
 }
 
+// Decrement wait group counter and waitgroup count
 func (wg *WaitGroupCount) Done() {
     atomic.AddInt64(&wg.count, -1)
     wg.WaitGroup.Done()
 }
 
+// Get the counter value for the wait group
 func (wg *WaitGroupCount) GetCount() int64 {
     return int64(atomic.LoadInt64(&wg.count))
 }
 
-func identify_matches(reference_profiles string, query_profiles string, match_threshold float64, output *bufio.Writer) {
-	/*
-		Fast match isolates
-		reference_profiles string: Input profiles for query against with the reference profiles
-		query_profiles string: Profiles to query against the references with
-		match_threshold uint: integer threshold to use in a match
-	*/
+// Fast match isolates
+// reference_profiles string: Input profiles for query against with the reference profiles
+// query_profiles string: Profiles to query against the references with
+// match_threshold float64: integer threshold to use in a match
+func IdentifyMatches(reference_profiles string, query_profiles string, match_threshold float64, output *bufio.Writer) {
 
 	reference, query := load_profiles(reference_profiles, query_profiles)
 	wg := WaitGroupCount{count: 0}
@@ -94,6 +95,7 @@ func identify_matches(reference_profiles string, query_profiles string, match_th
 }
 
 
+// get_distances get distances for a profile
 func get_distances(query_profile  *Profile, reference_profiles *[]*Profile, dist_fn func(*[]int, *[]int) float64, match_threshold float64, output_values *[]*FastMatch) {
 	/*
 		Tabulate all distances for a profile

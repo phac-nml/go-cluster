@@ -13,9 +13,9 @@ import (
 )
 
 /*
-	Create an output buffer for writing too
+	Create an output buffer for writing too, if no input file is passed stdout will be used.
 */
-func create_output_buffer(file_in string) *bufio.Writer {
+func CreateOutputBuffer(file_in string) *bufio.Writer {
 	var f *bufio.Writer
 	if file_in != "" {
 		file := open_file(OUTPUT_FILE, os.O_WRONLY)

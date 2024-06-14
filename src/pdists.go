@@ -108,7 +108,7 @@ func main() {
 		}
 		data_ := load_profile(INPUT_PROFILE)
 		data := *data_
-		f := create_output_buffer(OUTPUT_FILE)
+		f := CreateOutputBuffer(OUTPUT_FILE)
 		run_data(&data, f);
 		log.Println("All threads depleted.")
 		f.Flush()
@@ -129,7 +129,7 @@ func main() {
 		if distance_functions[DIST_FUNC].assignment < 2 && MATCH_THRESHOLD < 1 {
 			flaggy.ShowHelpAndExit("Distance function selected requires a value >1 for selection.")
 		}
-		f := create_output_buffer(OUTPUT_FILE)
+		f := CreateOutputBuffer(OUTPUT_FILE)
 		IdentifyMatches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, f)
 		defer f.Flush()
 		
@@ -142,7 +142,7 @@ func main() {
 		if INPUT_PROFILE == "" {
 			flaggy.ShowHelpAndExit("No input file selected");
 		}
-		f := create_output_buffer(OUTPUT_FILE)
+		f := CreateOutputBuffer(OUTPUT_FILE)
 		if LINKAGE_METHOD > LINKAGE_METHODS[len(LINKAGE_METHODS)-1].match_value || LINKAGE_METHOD < 0 {
 			flaggy.ShowHelpAndExit("Invalid linkage method selected.");
 		}

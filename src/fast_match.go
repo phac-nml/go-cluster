@@ -60,7 +60,6 @@ func IdentifyMatches(reference_profiles string, query_profiles string, match_thr
 	outputs := make([]*[]*FastMatch, len(*query))
 	default_capacity := int(0.05 * float64(len(*reference)) + 1) // Create capacity at 5% of reference values
 
-	// TODO add threading limit
 	for idx, profile := range *query {
 		output_arr := make([]*FastMatch, 0, default_capacity) 
 		outputs[idx] = &output_arr

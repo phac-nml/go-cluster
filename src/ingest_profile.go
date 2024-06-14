@@ -42,7 +42,7 @@ func initialize_lookup(scanner *bufio.Scanner, new_line_char string, line_delimi
 		log.Fatal("Input File appears to be empty.");
 	}
 
-	separated_line := split_line(scanner.Text(), new_line_char, line_delimiter);
+	separated_line := SplitLine(scanner.Text(), new_line_char, line_delimiter);
 	new_array := make([]*ProfileLookup, len(*separated_line))
 	for idx, _ := range new_array {
 		new_array[idx] = NewProfile();
@@ -96,7 +96,7 @@ func load_profiles(reference_profiles string, query_profiles string) (*[]*Profil
 		log.Fatal("Query File appears to be empty.");
 	}
 	// Get first line to skip header and get profiles
-	query_headers := split_line(query_scanner.Text(), new_line_char, line_delimiter);
+	query_headers := SplitLine(query_scanner.Text(), new_line_char, line_delimiter);
 	compare_profile_headers(query_headers, reference_headers)
 
 	query_data := create_profiles(query_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
@@ -136,7 +136,7 @@ func ingest_matrix(input string) ([][]float64, []string) {
 	var ids []string
 	line := 0
 	for scanner.Scan() {
-		separated_line := *split_line(scanner.Text(), NEWLINE_CHARACTER, COLUMN_DELIMITER)
+		separated_line := *SplitLine(scanner.Text(), NEWLINE_CHARACTER, COLUMN_DELIMITER)
 		row := make([]float64, len(separated_line)-1) // Separated Line length includes column ID
 		ids = append(ids, separated_line[0])
 		for idx, value := range separated_line[1:] {

@@ -65,8 +65,10 @@ func get_linkage_method(value int) string {
 	return linkage_method.identifier
 }
 
-
-func cluster(input_file string, linkage_value int, f *bufio.Writer) {
+/*
+	Cluster the profiles and create a dendrogram output
+*/
+func Cluster(input_file string, linkage_value int, f *bufio.Writer) {
 	/*
 		Cluster and create a dendrogram of the input data
 	*/

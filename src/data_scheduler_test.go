@@ -53,6 +53,6 @@ func TestRunData(t *testing.T){
 	f2, _ := ioutil.ReadFile(test_output_file)
 
 	if !bytes.Equal(f1, f2) {
-		t.Errorf("Input and output files to not match.")
+		t.Fatal("Input and output files to not match.")
 	}
 }

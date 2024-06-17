@@ -145,7 +145,7 @@ func main() {
 		if LINKAGE_METHOD > LINKAGE_METHODS[len(LINKAGE_METHODS)-1].match_value || LINKAGE_METHOD < 0 {
 			flaggy.ShowHelpAndExit("Invalid linkage method selected.");
 		}
-		cluster(INPUT_PROFILE, LINKAGE_METHOD, output_buffer)
+		Cluster(INPUT_PROFILE, LINKAGE_METHOD, output_buffer)
 		output_buffer.Flush()
 	}
 	

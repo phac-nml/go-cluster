@@ -344,7 +344,6 @@ func PairwiseToMatrix(input_file string, output_file string) {
 	/* Old main function for the mconversion routine.
 
 	Needs to be optimized to use buffers for output, so the buffer can be sorted and sequential writes are read to disk
-	
 	*/
 	sorted_keys, longest_val := unique_values(input_file)
 	key_positions := map[string]int{}

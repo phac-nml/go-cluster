@@ -18,7 +18,7 @@ var value_insertion_tests = []value_insertion {
 }
 
 func Test_InsertValue_NewProfile(t *testing.T){
-	pLookup := NewProfile()
+	pLookup := NewProfileLookup()
 	for _, test := range(value_insertion_tests){
 		if output := pLookup.InsertValue(&test.value); output != test.expected {
 			t.Errorf("Output: %d does not match expected %d", output, test.expected)

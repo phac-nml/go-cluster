@@ -15,17 +15,16 @@ import (
 /*
 	Create an output buffer for writing too, if no input file is passed stdout will be used.
 */
-func CreateOutputBuffer(file_in string) *bufio.Writer {
+func CreateOutputBuffer(file_in string) (*bufio.Writer, os.File) {
 	var f *bufio.Writer
+	var file os.File
 	if file_in != "" {
-		file := open_file(OUTPUT_FILE, os.O_WRONLY)
-		defer file.Close()
+		file := open_file(file_in, os.O_WRONLY)
 		f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
 	}else{
 		f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)
 	}
-
-	return f
+	return f, file
 }
 
 

@@ -101,6 +101,9 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 func main() {
 	//	Parallel distances
 	cli()
+	output_buffer, file_out := CreateOutputBuffer(OUTPUT_FILE)
+	defer file_out.Close()
+	
 	if distance_matrix.Used {
 
 		if len(os.Args) <= 2 {
@@ -108,10 +111,9 @@ func main() {
 		}
 		data_ := LoadProfile(INPUT_PROFILE)
 		data := *data_
-		f := CreateOutputBuffer(OUTPUT_FILE)
-		RunData(&data, f);
+		RunData(&data, output_buffer);
 		log.Println("All threads depleted.")
-		f.Flush()
+		output_buffer.Flush()
 	}
 
 	if convert_matrix.Used {
@@ -129,10 +131,8 @@ func main() {
 		if distance_functions[DIST_FUNC].assignment < 2 && MATCH_THRESHOLD < 1 {
 			flaggy.ShowHelpAndExit("Distance function selected requires a value >1 for selection.")
 		}
-		f := CreateOutputBuffer(OUTPUT_FILE)
-		IdentifyMatches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, f)
-		defer f.Flush()
-		
+		IdentifyMatches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, output_buffer)
+		output_buffer.Flush()
 	}
 
 	if tree.Used {
@@ -142,12 +142,11 @@ func main() {
 		if INPUT_PROFILE == "" {
 			flaggy.ShowHelpAndExit("No input file selected");
 		}
-		f := CreateOutputBuffer(OUTPUT_FILE)
 		if LINKAGE_METHOD > LINKAGE_METHODS[len(LINKAGE_METHODS)-1].match_value || LINKAGE_METHOD < 0 {
 			flaggy.ShowHelpAndExit("Invalid linkage method selected.");
 		}
-		cluster(INPUT_PROFILE, LINKAGE_METHOD, f)
-		f.Flush()
+		cluster(INPUT_PROFILE, LINKAGE_METHOD, output_buffer)
+		output_buffer.Flush()
 	}
 	
 	log.Println("Done")

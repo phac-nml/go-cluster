@@ -66,16 +66,16 @@ const (
 )
 
 func open_file(file_path string, open_type int) *os.File {
-	file, err := os.OpenFile(file_path, int(open_type), 0666)
+	file, err := os.OpenFile(file_path, int(open_type), 0o666)
 	if err != nil {
 		if os.IsNotExist(err) && open_type == os.O_WRONLY {
 			_, err := os.Create(file_path)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("Failed to create output file. %s", err)
 			}
 			file = open_file(file_path, open_type)
 		}else{
-			log.Fatal(err)
+			log.Fatalf("Failed to open file. %s", err)
 		}
 		
 	}

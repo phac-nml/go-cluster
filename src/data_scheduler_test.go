@@ -1,8 +1,12 @@
 
 package main
 
-import "testing"
-
+import (
+	"testing"
+	"io/ioutil"
+	"bytes"
+	"path"
+)
 
 type bucket_tests struct {
 	data_length, bucket_size, cpu_modifier, expected int
@@ -19,5 +23,36 @@ func TestCalculateBucketSize(t *testing.T){
 			t.Errorf("Output %d not equal to expected %d", output, test.expected)
 			t.Errorf("Output %+v", output)
 		}
+	}
+}
+
+
+// Test that molten file output is the same.
+func TestRunData(t *testing.T){
+	tempdir := t.TempDir()
+
+	t.Log("Starting end to end test for distance calculations.")
+	test_input := "TestInputs/DistanceMatrix/Random100_input.txt"
+	test_expected_output := "TestInputs/DistanceMatrix/Random100_molten.txt"
+	test_output_file := path.Join(tempdir, "output.txt")
+
+	t.Logf("Test Input: %s", test_input)
+	t.Logf("Test Expected Output: %s", test_expected_output)
+	t.Logf("Test Output Temp File: %s", test_output_file)
+	t.Log("Creating output buffer.")
+	out_buffer, out_file := CreateOutputBuffer(test_output_file)
+	
+	t.Log("Loading test allele profiles.")
+	test_data := LoadProfile(test_input)
+	RunData(test_data, out_buffer)
+	out_buffer.Flush()
+	out_file.Close()
+
+	// Compare outputs line by line
+	f1, _ := ioutil.ReadFile(test_expected_output)
+	f2, _ := ioutil.ReadFile(test_output_file)
+
+	if !bytes.Equal(f1, f2) {
+		t.Errorf("Input and output files to not match.")
 	}
 }

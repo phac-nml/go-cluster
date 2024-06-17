@@ -54,7 +54,7 @@ import (
 	"log"
 	"bufio"
 	"strings"
-	_ "sort"
+	"sort"
 )
 
 
@@ -107,7 +107,7 @@ func get_keys(value *map[string]bool) (*[]string, int ){
 	// Leaving the sort as an option, but as the output buffer of the distance calculation step is now 
 	// written to a buffer concurrently maintaining order, the inputs always enter this process in the order of
 	// the lower triangle
-	// sort.Strings(map_vals)
+	sort.Strings(map_vals)
 	
 	return &map_vals, longest_key
 }

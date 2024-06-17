@@ -54,7 +54,7 @@ import (
 	"log"
 	"bufio"
 	"strings"
-	"sort"
+	_ "sort"
 )
 
 
@@ -104,7 +104,10 @@ func get_keys(value *map[string]bool) (*[]string, int ){
 		vals++
 	}
 	map_vals = map_vals[0:vals]
-	sort.Strings(map_vals)
+	// Leaving the sort as an option, but as the output buffer of the distance calculation step is now 
+	// written to a buffer concurrently maintaining order, the inputs always enter this process in the order of
+	// the lower triangle
+	// sort.Strings(map_vals)
 	
 	return &map_vals, longest_key
 }
@@ -175,6 +178,8 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 			- e.g. File pointer is going to be increasing each time, so the next write should be relevant to that offset
 		4. after flushing buffer, return file pointer to 0
 		6. After all data is iterated through, flush buffer and remaining entries
+
+	? The inputs are now always in the lower triangle order, so there can be some alterations to this method
 	*/
 
 	// input data fields
@@ -332,13 +337,13 @@ func print_buffer(buffer *[]int, modulus int, buff_size int){
 }
 
 
-
-func pariwise_to_matrix(input_file string, output_file string) {
+/*
+	Function used to create a pairwise distance matrix from a previously generated molten output. 
+*/
+func PairwiseToMatrix(input_file string, output_file string) {
 	/* Old main function for the mconversion routine.
 
 	Needs to be optimized to use buffers for output, so the buffer can be sorted and sequential writes are read to disk
-
-	TODO need to include sample names when reading them in to add to annotate the matrix
 	
 	*/
 	sorted_keys, longest_val := unique_values(input_file)

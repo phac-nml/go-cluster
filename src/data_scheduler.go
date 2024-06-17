@@ -15,14 +15,12 @@ import (
 	"bufio"
 )
 
-// Distance of two profiles
-type OutputValue struct {
-	profile_1 string
-	profile_2 string
-	distance float64
-}
-
-func calculate_bucket_size(data_length int, runtime_cpus int, cpu_modifier int) int {
+/*
+	Determine how many bins of the input dataset should be processed when running the program.
+	The bucket size means the x Profiles will be processed by a thread, which will directly
+	relate to how many go routines are run at a time.
+*/
+func CalculateBucketSize(data_length int, runtime_cpus int, cpu_modifier int) int {
 	if cpu_modifier <= 0 {
 		log.Fatal("CPU modifier must be greater than 0")
 	}
@@ -30,11 +28,23 @@ func calculate_bucket_size(data_length int, runtime_cpus int, cpu_modifier int) 
 	return bucket_size
 }
 
+// A pair containing the start and end values for a given range of data to be processed.
 type Bucket struct {
 	start, end int
 }
 
-func buckets_indices(data_length int, bucket_size int) []Bucket {
+// The distance metric for a given comparison
+type ComparedProfile struct {
+	compared, reference *string;
+	distance float64;
+}
+
+/*
+	For a given data set determine the the start and end range of each of the bins to be used.
+	e.g. if a dataset has 1000 profiles, and our bucket size is 500 we will create bins with
+	an of [0, 500], [500, 1000]
+*/
+func BucketsIndices(data_length int, bucket_size int) []Bucket {
 	var bucks []Bucket
 	cpu_load_factor := CPU_LOAD_FACTOR // Need to add description to global options
 	window := bucket_size
@@ -68,32 +78,31 @@ func buckets_indices(data_length int, bucket_size int) []Bucket {
 }
 
 
-// Compute profile differences.
+// Compute profile differences in a given go routine.
 //
 // data_slice: the data range to use for calculation against the profile to be compared too.
 // profile_compare: the profile being compared in all threads
-// start_idx: The starting range in the profile to be used to initilize comparisons
-// end_idx: The end range to calculate comparisons up too.
+// bucket: The start and end range of the data set to write to
 // dist_fn: The distance function to use for calculation of differences. Takes pointer to two profile to compare and returns a float 64
 // array_writes: Array of values to append writes too
-func thread_execution(data_slice *[]*Profile, profile_compare *Profile, bucket Bucket, dist_fn func(*[]int, *[]int) float64, array_writes *[]*string) {
+func ThreadExecution(data_slice *[]*Profile, profile_compare *Profile, bucket Bucket, dist_fn func(*[]int, *[]int) float64, array_writes *[]*ComparedProfile) {
 
-	format_expression := get_format_string()
-
-	// TODO need to pass a slice properly in the future
 	for i := bucket.start; i < bucket.end; i++ {
 		x := dist_fn((*data_slice)[i].profile, profile_compare.profile);
 
-		output := fmt.Sprintf(format_expression, profile_compare.name, (*data_slice)[i].name, x);
+		output := ComparedProfile{&profile_compare.name, &(*data_slice)[i].name, x};
 		(*array_writes)[i-bucket.start] = &output;
 	}
 }
 
-
-func run_data(profile_data *[]*Profile, f *bufio.Writer) {
+/*
+	Main run loop to create a distance matrix. It create the outputs and will write
+	them directly to the passed in bufio.Writer.
+*/
+func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	/* Schedule and arrange the calculation of the data in parallel
+	This function is quite large and likely has room for optimization.
 	TODO redistribute data across threads at run time
-	TODO writing to stdout will be the initial method outputting calculated results, but this will likely change in the future
 	*/
 
 	start := time.Now()
@@ -104,22 +113,23 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 	bucket_index := 0
 	empty_name := ""
 	const cpu_modifier = 1
-	bucket_size := calculate_bucket_size(len(data), runtime.NumCPU(), cpu_modifier)
-	buckets := buckets_indices(len(data), bucket_size)
+	bucket_size := CalculateBucketSize(len(data), runtime.NumCPU(), cpu_modifier)
+	buckets := BucketsIndices(len(data), bucket_size)
 	arr_pos := 1
+	format_expression := GetFormatString()
 
 	// TODO can create a pool of go routines and pass the profile to compare to each channel
 	var wg sync.WaitGroup
 	for g := range data[0:] {
 		profile_comp := data[g] // copy struct for each thread
-		values_write := make([]*[]*string, len(buckets) - bucket_index)
+		values_write := make([]*[]*ComparedProfile, len(buckets) - bucket_index)
 		// TODO an incredible optimization here would be to go lockless, or re-use threads
 		for i := bucket_index; i < len(buckets); i++ {
-			array_writes := make([]*string, buckets[i].end - buckets[i].start)
+			array_writes := make([]*ComparedProfile, buckets[i].end - buckets[i].start)
 			values_write[i - bucket_index] = &array_writes
 			wg.Add(1)
-			go func(output_array *[]*string, bucket_compute Bucket, profile_compare *Profile){
-				thread_execution(&data, profile_compare, bucket_compute, dist, output_array)
+			go func(output_array *[]*ComparedProfile, bucket_compute Bucket, profile_compare *Profile){
+				ThreadExecution(&data, profile_compare, bucket_compute, dist, output_array)
 				wg.Done()
 			}(&array_writes, buckets[i], profile_comp)
 		}
@@ -128,7 +138,7 @@ func run_data(profile_data *[]*Profile, f *bufio.Writer) {
 		
 		for _, i := range values_write {
 			for _, value := range *i {
-				fmt.Fprintf(f, *value);
+				fmt.Fprintf(f, format_expression, *(*value).compared, *(*value).reference, (*value).distance);
 			}
 		}
 

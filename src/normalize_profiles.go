@@ -59,6 +59,6 @@ func (p *ProfileLookup) InsertValue(new_value *string) int {
 	Create a new type of ProfileLookup
 	* In the future It may be worth calculating an initial value size for the map
 */
-func NewProfile() *ProfileLookup {
+func NewProfileLookup() *ProfileLookup {
 	return &ProfileLookup{Counter: 0, Lookup: make(map[string]int)};
 }

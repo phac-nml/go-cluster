@@ -38,9 +38,11 @@ func SplitLine(string_in string, new_line_char string, line_delimiter string) *[
 }
 
 /*
-	get format output string
+	Users will expect a given distance matrix to have either decimals or just scalar values.
+	Depending on the distance function used, To truncate the values accordingly the format string
+	for Sprintf is returned by this function.
 */
-func get_format_string() string {
+func GetFormatString() string {
 	var format_expression string = "%s %s %.2f\n";
 	if distance_functions[DIST_FUNC].truncate {
 		format_expression = "%s %s %.0f\n";
@@ -66,7 +68,7 @@ func create_profiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_
 			}
 			
 		}
-		new_profile := newProfile(input_text[0], &data_in);
+		new_profile := NewProfile(input_text[0], &data_in);
 		data = append(data, new_profile); // pop data back array
 	}
 

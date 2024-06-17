@@ -106,10 +106,10 @@ func main() {
 		if len(os.Args) <= 2 {
 			flaggy.ShowHelpAndExit("No commands selected.");
 		}
-		data_ := load_profile(INPUT_PROFILE)
+		data_ := LoadProfile(INPUT_PROFILE)
 		data := *data_
 		f := CreateOutputBuffer(OUTPUT_FILE)
-		run_data(&data, f);
+		RunData(&data, f);
 		log.Println("All threads depleted.")
 		f.Flush()
 	}
@@ -118,7 +118,7 @@ func main() {
 		if len(os.Args) <= 2 {
 			flaggy.ShowHelpAndExit("No commands selected.");
 		}
-		pariwise_to_matrix(INPUT_PROFILE, OUTPUT_FILE)
+		PairwiseToMatrix(INPUT_PROFILE, OUTPUT_FILE)
 	}
 
 

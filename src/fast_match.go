@@ -17,8 +17,9 @@ import (
 	"bufio"
 )
 
-// Struct of fastmatch outputs
+// Struct of FastMatch outputs.
 type FastMatch struct {
+	// This struct is redundant as it has the same fields as ComparedProfile.
 	reference *string;
 	query *string;
 	distance float64;
@@ -43,6 +44,7 @@ func (wg *WaitGroupCount) Done() {
     wg.WaitGroup.Done()
 }
 
+// GetCount
 // Get the counter value for the wait group
 func (wg *WaitGroupCount) GetCount() int64 {
     return int64(atomic.LoadInt64(&wg.count))
@@ -53,8 +55,7 @@ func (wg *WaitGroupCount) GetCount() int64 {
 // query_profiles string: Profiles to query against the references with
 // match_threshold float64: integer threshold to use in a match
 func IdentifyMatches(reference_profiles string, query_profiles string, match_threshold float64, output *bufio.Writer) {
-
-	reference, query := load_profiles(reference_profiles, query_profiles)
+	reference, query := LoadProfiles(reference_profiles, query_profiles)
 	wg := WaitGroupCount{count: 0}
 	dist_function := distance_functions[DIST_FUNC].function
 	outputs := make([]*[]*FastMatch, len(*query))
@@ -78,7 +79,7 @@ func IdentifyMatches(reference_profiles string, query_profiles string, match_thr
 	}
 	wg.Wait()
 
-	format_string := get_format_string()
+	format_string := GetFormatString()
 	// TODO need to add log message for this as there could be no matches.
 	for idx, matches := range outputs {
 		prof_matches := *matches

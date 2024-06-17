@@ -70,7 +70,7 @@ func cluster(input_file string, linkage_value int, f *bufio.Writer) {
 	/*
 		Cluster and create a dendrogram of the input data
 	*/
-	matrix, ids := ingest_matrix(input_file)
+	matrix, ids := IngestMatrix(input_file)
 	
 	linkage_method := get_linkage_method(linkage_value)
 	log.Printf("Using %s as the linkage method for clustering", linkage_method)

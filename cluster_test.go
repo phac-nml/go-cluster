@@ -1,13 +1,11 @@
 package main
 
-
 import (
-	"testing"
-	"io/ioutil"
 	"bytes"
+	"io/ioutil"
 	"path"
+	"testing"
 )
-
 
 func TestCluster(t *testing.T) {
 	linkage_methods := 0
@@ -21,7 +19,7 @@ func TestCluster(t *testing.T) {
 	t.Logf("Test Input: %s", test_input_matrix)
 	t.Logf("Test Expected Output: %s", expected_output_tree)
 	t.Logf("Test Output: %s", output_tree)
-	
+
 	Cluster(test_input_matrix, linkage_methods, output_buffer)
 	output_buffer.Flush()
 	out_file.Close()

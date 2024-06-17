@@ -10,8 +10,8 @@ import "testing"
 var profile_name string = "test"
 var profile []int = []int{1, 2, 3}
 
-func Test_NewProfile(t *testing.T){
+func Test_NewProfile(t *testing.T) {
 	if output := NewProfile(profile_name, &profile); output.name != profile_name || output.profile != &profile {
-		t.Errorf("Output %+v not equal to expected.", *output);
+		t.Errorf("Output %+v not equal to expected.", *output)
 	}
 }

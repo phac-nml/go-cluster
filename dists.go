@@ -10,14 +10,12 @@ Matthew Wells: 2024-04-06
 
 package main
 
-
 type DistFunc struct {
-	function func(*[]int, *[]int) float64
+	function   func(*[]int, *[]int) float64
 	assignment int
-	help string
-	truncate bool // to truncate the output value to an integer or to remain as a float
+	help       string
+	truncate   bool // to truncate the output value to an integer or to remain as a float
 }
-
 
 var ham = DistFunc{function: hamming_distance, assignment: 0, help: "Hamming Distance", truncate: true}
 var ham_missing = DistFunc{function: hamming_distance_missing, assignment: 1, help: "Hamming distance skipping missing values", truncate: true}
@@ -29,11 +27,10 @@ var distance_functions = []DistFunc{ham, ham_missing, scaled, scaled_missing}
 
 var DIST_FUNC = 0 // Distance function default
 
-
 func hamming_distance(profile_1 *[]int, profile_2 *[]int) float64 {
 	/* Hamming distance not including missing data
 
-	*/
+	 */
 	p1 := *profile_1
 	p2 := *profile_2
 	count := 0
@@ -42,7 +39,7 @@ func hamming_distance(profile_1 *[]int, profile_2 *[]int) float64 {
 		if p1[idx] == 0 || p2[idx] == 0 {
 			continue
 		}
-		if  (p1[idx] ^ p2[idx]) != 0 {
+		if (p1[idx] ^ p2[idx]) != 0 {
 			count++
 		}
 	}
@@ -51,13 +48,13 @@ func hamming_distance(profile_1 *[]int, profile_2 *[]int) float64 {
 
 func hamming_distance_missing(profile_1 *[]int, profile_2 *[]int) float64 {
 	/* Returns hamming distance, with missing values counted as differences
-	*/
+	 */
 	p1 := *profile_1
 	p2 := *profile_2
 	count := 0
 	profile_len := len(p1)
-	for idx := 0; idx < profile_len; idx++  {
-		if  (p1[idx] ^ p2[idx]) != 0 {
+	for idx := 0; idx < profile_len; idx++ {
+		if (p1[idx] ^ p2[idx]) != 0 {
 			count++
 		}
 	}
@@ -66,20 +63,20 @@ func hamming_distance_missing(profile_1 *[]int, profile_2 *[]int) float64 {
 
 func scaled_distance(profile_1 *[]int, profile_2 *[]int) float64 {
 	/* Scaled distance with missing data skipped, increment counter
-	
-	*/
+
+	 */
 	p1 := *profile_1
 	p2 := *profile_2
 	count_compared_sites := 0
 	count_match := 0
 	profile_len := len(p1)
 	default_return := 100.0
-	for idx := 0; idx < profile_len; idx++  {
+	for idx := 0; idx < profile_len; idx++ {
 		if p1[idx] == 0 || p2[idx] == 0 {
 			continue
 		}
 		count_compared_sites++
-		if  (p1[idx] ^ p2[idx]) != 0 {
+		if (p1[idx] ^ p2[idx]) != 0 {
 			// If not equal skip
 			continue
 		}
@@ -95,19 +92,18 @@ func scaled_distance(profile_1 *[]int, profile_2 *[]int) float64 {
 	return default_return
 }
 
-
 func scaled_distance_missing(profile_1 *[]int, profile_2 *[]int) float64 {
 	/* Scaled distance with missing data counted as differences
-	
-	*/
+
+	 */
 	p1 := *profile_1
 	p2 := *profile_2
 	count_compared_sites := 0
 	count_match := 0
 	default_return := 100.0
 	profile_len := len(p1)
-	for idx := 0; idx < profile_len; idx++  {
-		if  (p1[idx] ^ p2[idx]) != 0 { // skip if the same
+	for idx := 0; idx < profile_len; idx++ {
+		if (p1[idx] ^ p2[idx]) != 0 { // skip if the same
 			continue
 		}
 		count_match++
@@ -121,4 +117,3 @@ func scaled_distance_missing(profile_1 *[]int, profile_2 *[]int) float64 {
 	}
 	return default_return
 }
-

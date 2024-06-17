@@ -1,13 +1,11 @@
 package main
 
-
 import (
-	"testing"
-	"io/ioutil"
 	"bytes"
+	"io/ioutil"
 	"path"
+	"testing"
 )
-
 
 func TestIdentifyMatches(t *testing.T) {
 	test_input_profile := "TestInputs/DistanceMatrix/Random100_input.txt"
@@ -20,7 +18,7 @@ func TestIdentifyMatches(t *testing.T) {
 	t.Logf("Test Input: %s", test_input_profile)
 	t.Logf("Test Expected Output: %s", expected_output)
 	t.Logf("Test Output: %s", output_fm)
-	
+
 	IdentifyMatches(test_input_profile, test_input_profile, 1, output_buffer)
 	output_buffer.Flush()
 	out_file.Close()

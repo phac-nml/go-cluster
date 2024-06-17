@@ -2,15 +2,14 @@
 package main
 
 import (
-	"testing"
-	"io/ioutil"
 	"bytes"
+	"io/ioutil"
 	"path"
+	"testing"
 )
 
-
 // Tests of matrix conversion
-func TestPairwiseToMatrix(t *testing.T){
+func TestPairwiseToMatrix(t *testing.T) {
 	tempdir := t.TempDir()
 	test_input_file := "TestInputs/DistanceMatrix/Random100_molten.txt"
 	test_expected_file := "TestInputs/DistanceMatrix/Random100_matrix.txt"

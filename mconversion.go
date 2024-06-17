@@ -21,7 +21,7 @@ For creating file in memory:
 	- if padding characters pose an issue they can be stripped in another pass of writing
 	- each line will have to be padded with a new line character
 
-TODO Create buffer for to contain sorted writes 
+TODO Create buffer for to contain sorted writes
 TODO write to array in parallel, then sort to create sequential writes to a file
 	- This is currently no in parallel, but a buffer can be written to sorting writes output writes
 
@@ -45,24 +45,22 @@ Matthew Wells: 2024-02-07
 
 package main
 
-
-import ( 
-	"os"
-	"io"
-	"fmt"
-	"strconv"
-	"log"
+import (
 	"bufio"
-	"strings"
+	"fmt"
+	"io"
+	"log"
+	"os"
 	"sort"
+	"strconv"
+	"strings"
 )
 
-
 const (
-	profile_1_pos = 0
-	profile_2_pos = 1
+	profile_1_pos  = 0
+	profile_2_pos  = 1
 	comparison_pos = 2
-	separator = '\t'
+	separator      = '\t'
 )
 
 func open_file(file_path string, open_type int) *os.File {
@@ -74,14 +72,13 @@ func open_file(file_path string, open_type int) *os.File {
 				log.Fatalf("Failed to create output file. %s", err)
 			}
 			file = open_file(file_path, open_type)
-		}else{
+		} else {
 			log.Fatalf("Failed to open file. %s", err)
 		}
-		
+
 	}
 	return file
 }
-
 
 func parse_int(value string) int {
 	val, err := strconv.ParseInt(value, 10, 64)
@@ -91,8 +88,7 @@ func parse_int(value string) int {
 	return int(val)
 }
 
-
-func get_keys(value *map[string]bool) (*[]string, int ){
+func get_keys(value *map[string]bool) (*[]string, int) {
 	map_vals := make([]string, len(*value))
 	vals := 0
 	longest_key := 0
@@ -104,15 +100,13 @@ func get_keys(value *map[string]bool) (*[]string, int ){
 		vals++
 	}
 	map_vals = map_vals[0:vals]
-	// Leaving the sort as an option, but as the output buffer of the distance calculation step is now 
+	// Leaving the sort as an option, but as the output buffer of the distance calculation step is now
 	// written to a buffer concurrently maintaining order, the inputs always enter this process in the order of
 	// the lower triangle
 	sort.Strings(map_vals) // TODO need to use a stable sort
-	
+
 	return &map_vals, longest_key
 }
-
-
 
 func unique_values(file_path string) (*[]string, int) {
 	set := map[string]bool{}
@@ -140,7 +134,7 @@ func unique_values(file_path string) (*[]string, int) {
 		return sorted_keys, longest_key
 	}
 	return sorted_keys, longest_val
-	
+
 }
 
 func pad_value(characters string, mask []byte) []byte {
@@ -151,7 +145,7 @@ func pad_value(characters string, mask []byte) []byte {
 	values := make([]byte, len(mask))
 	copy(values, mask)
 	for i, v := range characters {
-		
+
 		values[i] = byte(v)
 	}
 	return values
@@ -167,27 +161,26 @@ func make_mask(modulus int) []byte {
 	return mask
 }
 
-
-func write_matrix(input_path string, output_path string, positions *map[string]int, longest_val int){
+func write_matrix(input_path string, output_path string, positions *map[string]int, longest_val int) {
 	/*
-	
-	TODO optimize for sequential writes
-		1. Fill array containing data pairs of output position, and text out
-		2. Sort array on position out
-		3. Subtract difference in location from each sequential write.
-			- e.g. File pointer is going to be increasing each time, so the next write should be relevant to that offset
-		4. after flushing buffer, return file pointer to 0
-		6. After all data is iterated through, flush buffer and remaining entries
 
-	? The inputs are now always in the lower triangle order, so there can be some alterations to this method
+		TODO optimize for sequential writes
+			1. Fill array containing data pairs of output position, and text out
+			2. Sort array on position out
+			3. Subtract difference in location from each sequential write.
+				- e.g. File pointer is going to be increasing each time, so the next write should be relevant to that offset
+			4. after flushing buffer, return file pointer to 0
+			6. After all data is iterated through, flush buffer and remaining entries
+
+		? The inputs are now always in the lower triangle order, so there can be some alterations to this method
 	*/
 
 	// input data fields
 	file := open_file(input_path, os.O_RDONLY)
 	reader := bufio.NewReader(io.Reader(file))
-	
+
 	// output data fields
-	output := open_file(output_path, os.O_WRONLY | os.O_CREATE) // making this a buffered output may be easier
+	output := open_file(output_path, os.O_WRONLY|os.O_CREATE) // making this a buffered output may be easier
 
 	// columns size
 	modulus := len(*positions) + 1 // increase length by one to include data name row
@@ -196,9 +189,8 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	mask := make_mask(longest_val)
 	pad_len := int64(len(mask))
 
-
 	rows := modulus_64
-	for{
+	for {
 		rl, err := reader.ReadString('\n')
 		if err != nil {
 			break
@@ -209,12 +201,11 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		string_val_up := data[comparison_pos]
 		string_val_up = string_val_up[:len(string_val_up)-1] // drop new line character
 		string_val := pad_value(string_val_up, mask)
-		
+
 		// Get data positions, + 1 to offset their position in the matrix
 		p1 := (*positions)[data[profile_1_pos]] + 1
 		p2 := (*positions)[data[profile_2_pos]] + 1
 
-		
 		sp1 := calculate_buffer_position(p1, p2, modulus)
 		sp2 := calculate_buffer_position(p2, p1, modulus)
 
@@ -224,7 +215,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		output.Seek(0, io.SeekStart)
 		profile_1_name := pad_value(data[profile_1_pos], mask)
-		name_out, err := output.WriteAt(profile_1_name, int64(p1) * modulus_64 * pad_len)
+		name_out, err := output.WriteAt(profile_1_name, int64(p1)*modulus_64*pad_len)
 		_ = name_out
 		if err != nil {
 			log.Fatal(err)
@@ -232,7 +223,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 
 		// === column 1 position
 		output.Seek(0, io.SeekStart)
-		name_out, err = output.WriteAt(profile_1_name, int64(p1) * pad_len) // column position
+		name_out, err = output.WriteAt(profile_1_name, int64(p1)*pad_len) // column position
 		_ = name_out
 		if err != nil {
 			log.Fatal(err)
@@ -240,7 +231,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 
 		output.Seek(0, io.SeekStart)
 		profile_2_name := pad_value(data[profile_2_pos], mask)
-		name_out, err = output.WriteAt(profile_2_name, int64(p2) * modulus_64 * pad_len)
+		name_out, err = output.WriteAt(profile_2_name, int64(p2)*modulus_64*pad_len)
 		_ = name_out
 		if err != nil {
 			log.Fatal(err)
@@ -248,7 +239,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 
 		// column 2 position
 		output.Seek(0, io.SeekStart)
-		name_out, err = output.WriteAt(profile_2_name, int64(p2) * pad_len)
+		name_out, err = output.WriteAt(profile_2_name, int64(p2)*pad_len)
 		_ = name_out
 		if err != nil {
 			log.Fatal(err)
@@ -256,7 +247,6 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		
 		// Write at offsets
 		output.Seek(0, io.SeekStart)
 		// * name pad_len should only be applied to one value, this will differ for the top row
@@ -269,7 +259,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		output.Seek(0, io.SeekStart)
 		b2, err := output.WriteAt(string_val, (sp2 * pad_len))
 		_ = b2
-		
+
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -282,13 +272,12 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		log.Fatal(err)
 	}
 
-
 	// Replace tabs with new line characters in output file
 	output.Seek(0, io.SeekStart)
 	log.Println("Adding new line characters to reformatted matrix.")
 	newline := []byte("\n")
-	for i := modulus_64; i < modulus_64 * modulus_64; i = i + modulus_64 {
-		b, err := output.WriteAt(newline, (i * pad_len) - 1)
+	for i := modulus_64; i < modulus_64*modulus_64; i = i + modulus_64 {
+		b, err := output.WriteAt(newline, (i*pad_len)-1)
 		_ = b
 		if err != nil {
 			log.Fatal(err)
@@ -305,8 +294,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	defer output.Close()
 }
 
-
-func calculate_buffer_size(key_len int) int{
+func calculate_buffer_size(key_len int) int {
 	size := key_len * key_len
 	// TODO need to incorporate the profile name in this output
 	return size
@@ -314,31 +302,30 @@ func calculate_buffer_size(key_len int) int{
 
 func calculate_buffer_position(p1 int, p2 int, modulus int) int64 {
 	/*
-	rows and columns provided here, the value can go to two positions,
-	and the modulus is used to calculate where based on the rows and columns.
+		rows and columns provided here, the value can go to two positions,
+		and the modulus is used to calculate where based on the rows and columns.
 
-	e.g. to get rows (p1) * modulus + p2 (columns) and flip the location for the other value
+		e.g. to get rows (p1) * modulus + p2 (columns) and flip the location for the other value
 	*/
 	//fmt.Fprintf(os.Stdout, "%d %d\n", p1, p2)
 	// TODO need to incorporate the profile name in this output
 	return int64((p1 * modulus) + p2)
 }
 
-func print_buffer(buffer *[]int, modulus int, buff_size int){
+func print_buffer(buffer *[]int, modulus int, buff_size int) {
 	// ! This will go once memory mapping is implemented
 	fmt.Fprintf(os.Stdout, "\n")
-	for i := 1; i < buff_size; i++{
+	for i := 1; i < buff_size; i++ {
 		fmt.Fprintf(os.Stdout, "%d\t", (*buffer)[i-1])
-		if i % modulus == 0 {
+		if i%modulus == 0 {
 			fmt.Fprintf(os.Stdout, "\n")
 		}
 	}
 	fmt.Fprintf(os.Stdout, "\n")
 }
 
-
 /*
-	Function used to create a pairwise distance matrix from a previously generated molten output. 
+Function used to create a pairwise distance matrix from a previously generated molten output.
 */
 func PairwiseToMatrix(input_file string, output_file string) {
 	/* Old main function for the mconversion routine.
@@ -357,6 +344,3 @@ func PairwiseToMatrix(input_file string, output_file string) {
 	var output string = output_file
 	write_matrix(input_file, output, &key_positions, longest_val)
 }
-
-
-

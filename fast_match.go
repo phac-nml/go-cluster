@@ -7,24 +7,22 @@
 
 package main
 
-
 import (
+	"bufio"
+	"fmt"
 	"log"
 	"sort"
 	"sync"
 	"sync/atomic"
-	"fmt"
-	"bufio"
 )
 
 // Struct of FastMatch outputs.
 type FastMatch struct {
 	// This struct is redundant as it has the same fields as ComparedProfile.
-	reference *string;
-	query *string;
-	distance float64;
+	reference *string
+	query     *string
+	distance  float64
 }
-
 
 // Waitgroup count struct and functions come from: https://stackoverflow.com/a/68995552
 type WaitGroupCount struct {
@@ -34,20 +32,20 @@ type WaitGroupCount struct {
 
 // Increase waitgroup count by 1 a given delta
 func (wg *WaitGroupCount) Add(delta int) {
-    atomic.AddInt64(&wg.count, int64(delta))
-    wg.WaitGroup.Add(delta)
+	atomic.AddInt64(&wg.count, int64(delta))
+	wg.WaitGroup.Add(delta)
 }
 
 // Decrement wait group counter and waitgroup count
 func (wg *WaitGroupCount) Done() {
-    atomic.AddInt64(&wg.count, -1)
-    wg.WaitGroup.Done()
+	atomic.AddInt64(&wg.count, -1)
+	wg.WaitGroup.Done()
 }
 
 // GetCount
 // Get the counter value for the wait group
 func (wg *WaitGroupCount) GetCount() int64 {
-    return int64(atomic.LoadInt64(&wg.count))
+	return int64(atomic.LoadInt64(&wg.count))
 }
 
 // Fast match isolates
@@ -59,10 +57,10 @@ func IdentifyMatches(reference_profiles string, query_profiles string, match_thr
 	wg := WaitGroupCount{count: 0}
 	dist_function := distance_functions[DIST_FUNC].function
 	outputs := make([]*[]*FastMatch, len(*query))
-	default_capacity := int(0.05 * float64(len(*reference)) + 1) // Create capacity at 5% of reference values
+	default_capacity := int(0.05*float64(len(*reference)) + 1) // Create capacity at 5% of reference values
 
 	for idx, profile := range *query {
-		output_arr := make([]*FastMatch, 0, default_capacity) 
+		output_arr := make([]*FastMatch, 0, default_capacity)
 		outputs[idx] = &output_arr
 		profile_comp := profile
 		wg.Add(1)
@@ -94,14 +92,12 @@ func IdentifyMatches(reference_profiles string, query_profiles string, match_thr
 	output.Flush()
 }
 
-
 // get_distances get distances for a profile
-func get_distances(query_profile  *Profile, reference_profiles *[]*Profile, dist_fn func(*[]int, *[]int) float64, match_threshold float64, output_values *[]*FastMatch) {
+func get_distances(query_profile *Profile, reference_profiles *[]*Profile, dist_fn func(*[]int, *[]int) float64, match_threshold float64, output_values *[]*FastMatch) {
 	/*
 		Tabulate all distances for a profile
 	*/
-	
-	
+
 	for _, r_profile := range *reference_profiles {
 		output := dist_fn(query_profile.profile, r_profile.profile)
 		if output <= match_threshold {

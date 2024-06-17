@@ -1,23 +1,22 @@
-
 package main
 
 import (
-	"testing"
-	"io/ioutil"
 	"bytes"
+	"io/ioutil"
 	"path"
+	"testing"
 )
 
 type bucket_tests struct {
 	data_length, bucket_size, cpu_modifier, expected int
 }
 
-var bucket_size_tests = []bucket_tests {
+var bucket_size_tests = []bucket_tests{
 	bucket_tests{10, 1, 1, 10},
 	bucket_tests{10, 2, 1, 5},
 }
 
-func TestCalculateBucketSize(t *testing.T){
+func TestCalculateBucketSize(t *testing.T) {
 	for _, test := range bucket_size_tests {
 		if output := CalculateBucketSize(test.data_length, test.bucket_size, test.cpu_modifier); output != test.expected {
 			t.Errorf("Output %d not equal to expected %d", output, test.expected)
@@ -26,9 +25,8 @@ func TestCalculateBucketSize(t *testing.T){
 	}
 }
 
-
 // Test that molten file output is the same.
-func TestRunData(t *testing.T){
+func TestRunData(t *testing.T) {
 	tempdir := t.TempDir()
 
 	t.Log("Starting end to end test for distance calculations.")
@@ -41,7 +39,7 @@ func TestRunData(t *testing.T){
 	t.Logf("Test Output Temp File: %s", test_output_file)
 	t.Log("Creating output buffer.")
 	out_buffer, out_file := CreateOutputBuffer(test_output_file)
-	
+
 	t.Log("Loading test allele profiles.")
 	test_data := LoadProfile(test_input)
 	RunData(test_data, out_buffer)

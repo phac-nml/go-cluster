@@ -3,34 +3,29 @@
 Matthew Wells: 2024-02-06
 */
 
-
 package main
 
-
 import (
-	"os"
-	"log"
 	"bufio"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 )
 
 // A rows profile information
 type Profile struct {
-	name string
+	name    string
 	profile *[]int
 }
 
-
 /*
-	Create a new profile struct for the passed input value.
+Create a new profile struct for the passed input value.
 */
 func NewProfile(name string, profile *[]int) *Profile {
 	p := Profile{name: name, profile: profile}
 	return &p
 }
-
-
 
 // A utility function for creating a new bufio.Scanner the same way each time.
 func _create_scanner(file_path string) (*bufio.Scanner, *os.File) {
@@ -44,69 +39,66 @@ func _create_scanner(file_path string) (*bufio.Scanner, *os.File) {
 }
 
 /*
-	Initialize the look up for each allele type per a given column. This takes the header of the input allele
-	profile to create a Map for each column. This allows for a unique identifier to be assigned to each unique
-	value passed into the program regardless of its format as the Map uses strings for its key values.
+Initialize the look up for each allele type per a given column. This takes the header of the input allele
+profile to create a Map for each column. This allows for a unique identifier to be assigned to each unique
+value passed into the program regardless of its format as the Map uses strings for its key values.
 */
 func InitializeLookup(scanner *bufio.Scanner, new_line_char string, line_delimiter string) (*[]*ProfileLookup, *[]string) {
-	first_line := scanner.Scan(); // get header line
+	first_line := scanner.Scan() // get header line
 	if !first_line {
-		log.Fatal("Input File appears to be empty.");
+		log.Fatal("Input File appears to be empty.")
 	}
 
-	separated_line := SplitLine(scanner.Text(), new_line_char, line_delimiter);
+	separated_line := SplitLine(scanner.Text(), new_line_char, line_delimiter)
 	new_array := make([]*ProfileLookup, len(*separated_line))
 	for idx, _ := range new_array {
-		new_array[idx] = NewProfileLookup();
+		new_array[idx] = NewProfileLookup()
 	}
-	return &new_array, separated_line;
+	return &new_array, separated_line
 }
 
-
 /*
-	Split a tab delimited profile and convert it into allelic profile.
+Split a tab delimited profile and convert it into allelic profile.
 
-	The input is a string (to an existing file) of horizontally listed allele profiles, The contents
-	of the allele profiles can be string, hashes, integers etc. As we normalize the inputs by assigning
-	a unique ID per a column input.
+The input is a string (to an existing file) of horizontally listed allele profiles, The contents
+of the allele profiles can be string, hashes, integers etc. As we normalize the inputs by assigning
+a unique ID per a column input.
 */
 func LoadProfile(file_path string) *[]*Profile {
-	new_line_char := NEWLINE_CHARACTER;
-	line_delimiter := COLUMN_DELIMITER;
-	file_scanner, file := _create_scanner(file_path);
-	defer file.Close();
+	new_line_char := NEWLINE_CHARACTER
+	line_delimiter := COLUMN_DELIMITER
+	file_scanner, file := _create_scanner(file_path)
+	defer file.Close()
 	//var data []*Profile;
-	log.Println("Ingesting profile and normalizing allele inputs.");
-	var missing_value string = MISSING_ALLELE_STRING;
-	normalization_lookup, _ := InitializeLookup(file_scanner, new_line_char, line_delimiter);
-	data := create_profiles(file_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value);
-
+	log.Println("Ingesting profile and normalizing allele inputs.")
+	var missing_value string = MISSING_ALLELE_STRING
+	normalization_lookup, _ := InitializeLookup(file_scanner, new_line_char, line_delimiter)
+	data := create_profiles(file_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
 
 	normalization_lookup = nil // Flag objects for GC
-	log.Println("Finished ingesting profile.");
+	log.Println("Finished ingesting profile.")
 
 	return data
 }
 
-
 /*
-	Reference and query profile are loaded for fast matching against each other. This function is slightly
-	different than the one used for loading a single profile for distance matrix generation as both the
-	of the profiles need to be "normalized" using the same data structure to make sure both profiles
-	receive the same allele code between two files.
+Reference and query profile are loaded for fast matching against each other. This function is slightly
+different than the one used for loading a single profile for distance matrix generation as both the
+of the profiles need to be "normalized" using the same data structure to make sure both profiles
+receive the same allele code between two files.
 
-	reference_profiles string: Input profiles for query against with the reference profiles
-	query_profiles: Profiles to query against the references with
+reference_profiles string: Input profiles for query against with the reference profiles
+query_profiles: Profiles to query against the references with
 */
 func LoadProfiles(reference_profiles string, query_profiles string) (*[]*Profile, *[]*Profile) {
 
-	var missing_value string = MISSING_ALLELE_STRING;
-	new_line_char := NEWLINE_CHARACTER;
-	line_delimiter := COLUMN_DELIMITER;
-	reference_scanner, ref_file := _create_scanner(reference_profiles);
-	query_scanner, query_file := _create_scanner(query_profiles);
-	defer ref_file.Close();
-	defer query_file.Close();
+	var missing_value string = MISSING_ALLELE_STRING
+	new_line_char := NEWLINE_CHARACTER
+	line_delimiter := COLUMN_DELIMITER
+	reference_scanner, ref_file := _create_scanner(reference_profiles)
+	query_scanner, query_file := _create_scanner(query_profiles)
+	defer ref_file.Close()
+	defer query_file.Close()
 
 	log.Println("Ingesting and normalizing reference profiles.")
 	normalization_lookup, reference_headers := InitializeLookup(reference_scanner, new_line_char, line_delimiter)
@@ -114,12 +106,12 @@ func LoadProfiles(reference_profiles string, query_profiles string) (*[]*Profile
 
 	log.Println("Ingesting and normalizing query profiles.")
 	// Get first line of scanner to verify inputs are the same
-	first_line_query := query_scanner.Scan();
+	first_line_query := query_scanner.Scan()
 	if !first_line_query {
-		log.Fatal("Query File appears to be empty.");
+		log.Fatal("Query File appears to be empty.")
 	}
 	// Get first line to skip header and get profiles
-	query_headers := SplitLine(query_scanner.Text(), new_line_char, line_delimiter);
+	query_headers := SplitLine(query_scanner.Text(), new_line_char, line_delimiter)
 	CompareProfileHeaders(query_headers, reference_headers)
 
 	query_data := create_profiles(query_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
@@ -129,10 +121,9 @@ func LoadProfiles(reference_profiles string, query_profiles string) (*[]*Profile
 	return ref_data, query_data
 }
 
-
 /*
-	Compare the columns from your queries vs the references. This is a rudimentary 
-	check to verify that you are passing allelic profiles generated with the same inputs.
+Compare the columns from your queries vs the references. This is a rudimentary
+check to verify that you are passing allelic profiles generated with the same inputs.
 */
 func CompareProfileHeaders(query_headers *[]string, reference_headers *[]string) {
 	len_query := len(*query_headers)
@@ -144,17 +135,16 @@ func CompareProfileHeaders(query_headers *[]string, reference_headers *[]string)
 		if q_h, r_h := (*query_headers)[idx], (*reference_headers)[idx]; q_h != r_h {
 			log.Fatalf("Mismatch in column names between query (%s) and reference (%s).", q_h, r_h)
 		}
-	} 
+	}
 
 }
 
-
 /*
-	Ingest a previously generated symmetric data matrix for use in clustering. All data
-	within the matrix will be cast into a float.
+Ingest a previously generated symmetric data matrix for use in clustering. All data
+within the matrix will be cast into a float.
 */
 func IngestMatrix(input string) ([][]float64, []string) {
-	scanner, _ := _create_scanner(input);
+	scanner, _ := _create_scanner(input)
 	scanner.Scan() // Throw away first line
 	var matrix [][]float64
 	var ids []string

@@ -9,18 +9,18 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"log"
-	"time"
 	"runtime"
 	"sync"
-	"fmt"
-	"bufio"
+	"time"
 )
 
 /*
-	Determine how many bins of the input dataset should be processed when running the program.
-	The bucket size means the x Profiles will be processed by a thread, which will directly
-	relate to how many go routines are run at a time.
+Determine how many bins of the input dataset should be processed when running the program.
+The bucket size means the x Profiles will be processed by a thread, which will directly
+relate to how many go routines are run at a time.
 */
 func CalculateBucketSize(data_length int, runtime_cpus int, cpu_modifier int) int {
 	if cpu_modifier <= 0 {
@@ -37,14 +37,14 @@ type Bucket struct {
 
 // The distance metric for a given comparison
 type ComparedProfile struct {
-	compared, reference *string;
-	distance float64;
+	compared, reference *string
+	distance            float64
 }
 
 /*
-	For a given data set determine the the start and end range of each of the bins to be used.
-	e.g. if a dataset has 1000 profiles, and our bucket size is 500 we will create bins with
-	an of [0, 500], [500, 1000]
+For a given data set determine the the start and end range of each of the bins to be used.
+e.g. if a dataset has 1000 profiles, and our bucket size is 500 we will create bins with
+an of [0, 500], [500, 1000]
 */
 func BucketsIndices(data_length int, bucket_size int) []Bucket {
 	var bucks []Bucket
@@ -53,13 +53,13 @@ func BucketsIndices(data_length int, bucket_size int) []Bucket {
 
 	cpu_load_string := fmt.Sprintf("CPU load factor x%d", cpu_load_factor)
 	log.Println(cpu_load_string)
-	
+
 	if window > data_length {
 		bucks = append(bucks, Bucket{0, data_length})
 		log.Println("Running single threaded as there are too few entries to justify multithreading.")
 		return bucks
 	}
-	
+
 	if data_length < (runtime.NumCPU() * cpu_load_factor) {
 		bucks = append(bucks, Bucket{0, data_length})
 		log.Println("Running single threaded as there are too few entries to justify multithreading.")
@@ -70,15 +70,14 @@ func BucketsIndices(data_length int, bucket_size int) []Bucket {
 		bucks = append(bucks, Bucket{i - window, i})
 	}
 
-	bucks = append(bucks, Bucket{bucks[len(bucks) - 1].end, data_length})
-	
-	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks) - 1)
+	bucks = append(bucks, Bucket{bucks[len(bucks)-1].end, data_length})
+
+	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks)-1)
 	log.Println(threads_running)
 	profiles_to_thread := fmt.Sprintf("Allocating ~%d profiles per a thread.", window)
 	log.Println(profiles_to_thread)
 	return bucks
 }
-
 
 // Compute profile differences in a given go routine.
 //
@@ -90,16 +89,16 @@ func BucketsIndices(data_length int, bucket_size int) []Bucket {
 func ThreadExecution(data_slice *[]*Profile, profile_compare *Profile, bucket Bucket, dist_fn func(*[]int, *[]int) float64, array_writes *[]*ComparedProfile) {
 
 	for i := bucket.start; i < bucket.end; i++ {
-		x := dist_fn((*data_slice)[i].profile, profile_compare.profile);
+		x := dist_fn((*data_slice)[i].profile, profile_compare.profile)
 
-		output := ComparedProfile{&profile_compare.name, &(*data_slice)[i].name, x};
-		(*array_writes)[i-bucket.start] = &output;
+		output := ComparedProfile{&profile_compare.name, &(*data_slice)[i].name, x}
+		(*array_writes)[i-bucket.start] = &output
 	}
 }
 
 /*
-	Main run loop to create a distance matrix. It create the outputs and will write
-	them directly to the passed in bufio.Writer.
+Main run loop to create a distance matrix. It create the outputs and will write
+them directly to the passed in bufio.Writer.
 */
 func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	/* Schedule and arrange the calculation of the data in parallel
@@ -109,7 +108,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 
 	start := time.Now()
 	data := *profile_data
-	
+
 	dist := distance_functions[DIST_FUNC].function
 
 	bucket_index := 0
@@ -124,31 +123,31 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	var wg sync.WaitGroup
 	for g := range data[0:] {
 		profile_comp := data[g] // copy struct for each thread
-		values_write := make([]*[]*ComparedProfile, len(buckets) - bucket_index)
+		values_write := make([]*[]*ComparedProfile, len(buckets)-bucket_index)
 		// TODO an incredible optimization here would be to go lockless, or re-use threads
 		for i := bucket_index; i < len(buckets); i++ {
-			array_writes := make([]*ComparedProfile, buckets[i].end - buckets[i].start)
-			values_write[i - bucket_index] = &array_writes
+			array_writes := make([]*ComparedProfile, buckets[i].end-buckets[i].start)
+			values_write[i-bucket_index] = &array_writes
 			wg.Add(1)
-			go func(output_array *[]*ComparedProfile, bucket_compute Bucket, profile_compare *Profile){
+			go func(output_array *[]*ComparedProfile, bucket_compute Bucket, profile_compare *Profile) {
 				ThreadExecution(&data, profile_compare, bucket_compute, dist, output_array)
 				wg.Done()
 			}(&array_writes, buckets[i], profile_comp)
 		}
-		wg.Wait() // Wait for everyone to catch up
+		wg.Wait()                     // Wait for everyone to catch up
 		buckets[bucket_index].start++ // update the current buckets tracker
-		
+
 		for _, i := range values_write {
 			for _, value := range *i {
-				fmt.Fprintf(f, format_expression, *(*value).compared, *(*value).reference, (*value).distance);
+				fmt.Fprintf(f, format_expression, *(*value).compared, *(*value).reference, (*value).distance)
 			}
 		}
 
-		if len(buckets) > 1 && arr_pos % bucket_size == 0 {
+		if len(buckets) > 1 && arr_pos%bucket_size == 0 {
 			for f := buckets[bucket_index].end - bucket_size; f < buckets[bucket_index].end; f++ {
-				data[f].profile = nil;
-				data[f].name = empty_name;
-				
+				data[f].profile = nil
+				data[f].name = empty_name
+
 			}
 			bucket_index++
 			end := time.Now().Sub(start)
@@ -156,9 +155,8 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			log.Println(thread_depletion_time)
 			start = time.Now()
 		}
-		arr_pos++;
+		arr_pos++
 	}
 	wg.Wait()
-	f.Flush();
+	f.Flush()
 }
-

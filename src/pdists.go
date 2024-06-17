@@ -83,6 +83,7 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	fast_match.Int64(&FM_THREAD_LIMIT, "l", "goroutine-limit", thread_limit_help)
 
 	tree = flaggy.NewSubcommand("tree")
+	tree.Description = "Create a dendrogram from a supplied distance matrix."
 	tree.String(&INPUT_PROFILE, "i", "input", "File path to previously generate distance matrix.")
 	tree.String(&OUTPUT_FILE, "o", "output", "Name of output file. If nothing is specified results will be sent to stdout.")
 	tree.Int(&LINKAGE_METHOD, "l", "linkage-method", linkage_methods_help)

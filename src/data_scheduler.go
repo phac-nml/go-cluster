@@ -3,6 +3,8 @@
 // Data scheduler handing data slices to threads for resource handling.
 // Only outputting pairwise comparisons, as a separate program will convert the file into a matrix
 //
+// ? While the molten data format may be annoying it allows one to potentially add resume functionality
+//
 // Matthew Wells:2024-02-07
 package main
 
@@ -112,7 +114,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 
 	bucket_index := 0
 	empty_name := ""
-	const cpu_modifier = 1
+	const cpu_modifier = 2
 	bucket_size := CalculateBucketSize(len(data), runtime.NumCPU(), cpu_modifier)
 	buckets := BucketsIndices(len(data), bucket_size)
 	arr_pos := 1

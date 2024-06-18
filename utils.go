@@ -13,9 +13,7 @@ import (
 )
 const MissingAlleleValue int = 0
 
-/*
-Create an output buffer for writing too, if no input file is passed stdout will be used.
-*/
+// Create an output buffer for writing too, if no input file is passed stdout will be used.
 func CreateOutputBuffer(file_in string) (*bufio.Writer, os.File) {
 	var f *bufio.Writer
 	var file os.File
@@ -28,18 +26,16 @@ func CreateOutputBuffer(file_in string) (*bufio.Writer, os.File) {
 	return f, file
 }
 
-/* Split a profile lines on columns
-*/
+// Split a profile lines on columns
 func SplitLine(string_in string, new_line_char string, line_delimiter string) *[]string {
 	output := strings.Split(strings.TrimRight(string_in, new_line_char), line_delimiter)
 	return &output
 }
 
-/*
-Users will expect a given distance matrix to have either decimals or just scalar values.
-Depending on the distance function used, To truncate the values accordingly the format string
-for Sprintf is returned by this function.
-*/
+
+// Users will expect a given distance matrix to have either decimals or just scalar values.
+// Depending on the distance function used, To truncate the values accordingly the format string
+// for Sprintf is returned by this function.
 func GetFormatString() string {
 	var format_expression string = "%s %s %.2f\n"
 	if distance_functions[DIST_FUNC].truncate {

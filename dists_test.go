@@ -40,7 +40,7 @@ func TestHammingDistance(t *testing.T) {
 
 func TestHammingDistanceMissing(t *testing.T) {
 	for _, test := range hamming_dist_tests {
-		if output := HammingDistance(&test.profile1, &test.profile2); output != test.expected_missing {
+		if output := HammingDistanceMissing(&test.profile1, &test.profile2); output != test.expected_missing {
 			t.Errorf("Output %f not equal to expected %f", output, test.expected_missing)
 		}
 	}
@@ -55,9 +55,9 @@ func TestScaledDistance(t *testing.T) {
 }
 
 func TestScaledDistanceMissing(t *testing.T) {
-	for _, test := range scaled_dist_tests {
-		if output := ScaledDistance(&test.profile1, &test.profile2); output != test.expected_missing {
-			t.Errorf("Output %f not equal to expected %f", output, test.expected_missing)
+	for idx, test := range scaled_dist_tests {
+		if output := ScaledDistanceMissing(&test.profile1, &test.profile2); output != test.expected_missing {
+			t.Errorf("Test - %d: Output %f not equal to expected %f", idx, output, test.expected_missing)
 		}
 	}
 }

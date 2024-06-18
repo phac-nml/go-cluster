@@ -98,22 +98,19 @@ func ScaledDistanceMissing(profile_1 *[]int, profile_2 *[]int) float64 {
 
 	p1 := *profile_1
 	p2 := *profile_2
-	count_compared_sites := 0
 	count_match := 0
 	default_return := 100.0
 	profile_len := len(p1)
 	for idx := 0; idx < profile_len; idx++ {
-		if (p1[idx] ^ p2[idx]) != MissingAlleleValue { // skip if the same
+		if  p1[idx] != p2[idx] { // skip if the same
 			continue
 		}
 		count_match++
 	}
 
-	if count_compared_sites != MissingAlleleValue {
-		cc_sites_f64 := float64(profile_len)
-		count_match_f64 := float64(count_match)
-		scaled_value := default_return * ((cc_sites_f64 - count_match_f64) / cc_sites_f64)
-		return scaled_value
-	}
+	cc_sites_f64 := float64(profile_len)
+	count_match_f64 := float64(count_match)
+	default_return = default_return * ((cc_sites_f64 - count_match_f64) / cc_sites_f64)
+
 	return default_return
 }

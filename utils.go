@@ -48,24 +48,14 @@ func GetFormatString() string {
 	return format_expression
 }
 
-/*
-Create profiles for data profiles
-*/
-func create_profiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_line_char string, line_delimiter string, missing_value string) *[]*Profile {
+// Create profiles for data profiles
+func CreateProfiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_line_char string, line_delimiter string, missing_value string) *[]*Profile {
 	
 	var data []*Profile
 	for file_scanner.Scan() {
-		input_text := *SplitLine(file_scanner.Text(), new_line_char, line_delimiter)
-		data_in := make([]int, len(input_text)-1)         // Create an array to populate
-		for f, x := range input_text[1:len(input_text)] { // starting at position 1 as first value is the sample ID
-			if missing_value != x {
-				data_in[f] = (*lookup)[f].InsertValue(&x)
-			} else {
-				data_in[f] = MissingAlleleValue
-			}
-
-		}
-		new_profile := NewProfile(input_text[0], &data_in)
+		input_text := SplitLine(file_scanner.Text(), new_line_char, line_delimiter)
+		data_in := make([]int, len(*input_text)-1)         // Create an array to populate
+		new_profile := LineToProfile(input_text, &data_in, lookup, &missing_value)
 		data = append(data, new_profile) // pop data back array
 	}
 
@@ -74,4 +64,21 @@ func create_profiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_
 	}
 	log.Printf("Data contains: %d profiles.", len(data))
 	return &data
+}
+
+
+// Convert a text line into a profile use in distance calculations
+func LineToProfile(input_text *[]string, data_in *[]int, lookup *[]*ProfileLookup, missing_value *string) *Profile {
+
+	input_data := *input_text
+	no_allele := *missing_value
+	for f, x := range input_data[1:len(input_data)] {
+		if no_allele != x {
+			(*data_in)[f] = (*lookup)[f].InsertValue(&x)
+		}else {
+			(*data_in)[f] = MissingAlleleValue
+		}
+	}
+	out_profile := NewProfile((*input_text)[0], data_in)
+	return out_profile
 }

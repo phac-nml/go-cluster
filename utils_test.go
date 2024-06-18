@@ -30,3 +30,38 @@ func TestSplitLine(t *testing.T){
 		}
 	}
 }
+
+
+type LineToProfileTest struct {
+	input_text []string;
+	missing_value string;
+	expected Profile;
+}
+
+
+var LineToProfileTests = []LineToProfileTest{
+	LineToProfileTest{
+		[]string{"profile1", "name2", "name1", "0"}, // outputs for each column should be one as they are in the same columns
+		"0",
+		Profile{ "profile1", &[]int{1, 1, MissingAlleleValue}},
+	}, 
+}
+
+func TestLineToProfile(t *testing.T) {
+	
+	for _, test := range LineToProfileTests {
+		profiles_len := len(test.input_text) - 1
+		data_in := make([]int, profiles_len)
+		lookups := make([]*ProfileLookup, profiles_len)
+		val := 0
+		for val < profiles_len {
+			pLookup := NewProfileLookup()
+			lookups[val] = pLookup
+			val += 1
+		}
+		if output := LineToProfile(&test.input_text,  &data_in, &lookups, &test.missing_value); (*output).name != test.expected.name  || !reflect.DeepEqual(*(*output).profile, test.expected.profile) {
+			t.Errorf("Output not equal to expected")
+			t.Errorf("Output %+v expected %+v", (*output).profile, test.expected.profile)
+		}
+	}
+}

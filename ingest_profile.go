@@ -73,7 +73,7 @@ func LoadProfile(file_path string) *[]*Profile {
 	log.Println("Ingesting profile and normalizing allele inputs.")
 	var missing_value string = MISSING_ALLELE_STRING
 	normalization_lookup, _ := InitializeLookup(file_scanner, new_line_char, line_delimiter)
-	data := create_profiles(file_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
+	data := CreateProfiles(file_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
 
 	normalization_lookup = nil // Flag objects for GC
 	log.Println("Finished ingesting profile.")
@@ -102,7 +102,7 @@ func LoadProfiles(reference_profiles string, query_profiles string) (*[]*Profile
 
 	log.Println("Ingesting and normalizing reference profiles.")
 	normalization_lookup, reference_headers := InitializeLookup(reference_scanner, new_line_char, line_delimiter)
-	ref_data := create_profiles(reference_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
+	ref_data := CreateProfiles(reference_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
 
 	log.Println("Ingesting and normalizing query profiles.")
 	// Get first line of scanner to verify inputs are the same
@@ -114,7 +114,7 @@ func LoadProfiles(reference_profiles string, query_profiles string) (*[]*Profile
 	query_headers := SplitLine(query_scanner.Text(), new_line_char, line_delimiter)
 	CompareProfileHeaders(query_headers, reference_headers)
 
-	query_data := create_profiles(query_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
+	query_data := CreateProfiles(query_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
 
 	normalization_lookup = nil
 	log.Println("Finished ingesting and normalizing profiles.")

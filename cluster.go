@@ -66,11 +66,8 @@ func get_linkage_method(value int) string {
 Cluster the profiles and create a dendrogram output
 */
 func Cluster(input_file string, linkage_value int, f *bufio.Writer) {
-	/*
-		Cluster and create a dendrogram of the input data
-	*/
-	matrix, ids := IngestMatrix(input_file)
 
+	matrix, ids := IngestMatrix(input_file)
 	linkage_method := get_linkage_method(linkage_value)
 	log.Printf("Using %s as the linkage method for clustering", linkage_method)
 	clustered_data, err := hclust.Cluster(matrix, linkage_method)
@@ -78,7 +75,7 @@ func Cluster(input_file string, linkage_value int, f *bufio.Writer) {
 		log.Fatal(err)
 	}
 	log.Print("Adding labels to dendrogram.")
-	newick, err := hclust.Tree(clustered_data, ids) // TODO write out tree
+	newick, err := hclust.Tree(clustered_data, ids)
 	if err != nil {
 		log.Fatal(err)
 	}

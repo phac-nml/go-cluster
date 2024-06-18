@@ -17,7 +17,7 @@ var value_insertion_tests = []value_insertion{
 	value_insertion{"test2", 2},
 }
 
-func Test_InsertValue_NewProfile(t *testing.T) {
+func TestInsertValue_NewProfile(t *testing.T) {
 	pLookup := NewProfileLookup()
 	for _, test := range value_insertion_tests {
 		if output := pLookup.InsertValue(&test.value); output != test.expected {

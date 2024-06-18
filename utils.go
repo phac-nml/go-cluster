@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 )
+const MissingAlleleValue int = 0
 
 /*
 Create an output buffer for writing too, if no input file is passed stdout will be used.
@@ -52,7 +53,7 @@ func GetFormatString() string {
 Create profiles for data profiles
 */
 func create_profiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_line_char string, line_delimiter string, missing_value string) *[]*Profile {
-	const missing_allele_value int = 0
+	
 	var data []*Profile
 	for file_scanner.Scan() {
 		input_text := *SplitLine(file_scanner.Text(), new_line_char, line_delimiter)
@@ -61,7 +62,7 @@ func create_profiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_
 			if missing_value != x {
 				data_in[f] = (*lookup)[f].InsertValue(&x)
 			} else {
-				data_in[f] = missing_allele_value
+				data_in[f] = MissingAlleleValue
 			}
 
 		}

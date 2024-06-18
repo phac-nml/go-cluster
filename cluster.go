@@ -41,7 +41,7 @@ var linkage_methods_help string = func() string {
 	return start_message
 }()
 
-func get_linkage_method(value int) string {
+func GetLinkageMethod(value int) string {
 	var linkage_method LinkageMethod
 	switch value {
 	case average.match_value:
@@ -68,7 +68,7 @@ Cluster the profiles and create a dendrogram output
 func Cluster(input_file string, linkage_value int, f *bufio.Writer) {
 
 	matrix, ids := IngestMatrix(input_file)
-	linkage_method := get_linkage_method(linkage_value)
+	linkage_method := GetLinkageMethod(linkage_value)
 	log.Printf("Using %s as the linkage method for clustering", linkage_method)
 	clustered_data, err := hclust.Cluster(matrix, linkage_method)
 	if err != nil {

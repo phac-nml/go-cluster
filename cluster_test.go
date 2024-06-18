@@ -30,3 +30,27 @@ func TestCluster(t *testing.T) {
 		t.Fatal("Input and output files to not match.")
 	}
 }
+
+type LinkageMethodTest struct {
+	linkage_method int;
+	expected string
+}
+
+var LinkageMethodTests = []LinkageMethodTest{
+	LinkageMethodTest{0, "average"},
+	LinkageMethodTest{1, "centroid"},
+	LinkageMethodTest{2, "complete"},
+	LinkageMethodTest{3, "mcquitty"},
+	LinkageMethodTest{4, "median"},
+	LinkageMethodTest{5, "single"},
+	LinkageMethodTest{6, "ward"},
+}
+
+func TestGetLinkageMethod(t *testing.T){
+	for _, test := range LinkageMethodTests{
+		if output := GetLinkageMethod(test.linkage_method); output != test.expected {
+			t.Errorf("Output not equal to expected %s %s", output, test.expected)
+			t.Errorf("Output %+v", output)
+		}
+	}
+}

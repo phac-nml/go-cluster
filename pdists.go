@@ -58,7 +58,7 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	distance_matrix.Int(&DIST_FUNC, "d", "distance", distance_func_help)
 	distance_matrix.String(&OUTPUT_FILE, "o", "output", "Name of output file. If nothing is specified results will be sent to stdout.")
 	distance_matrix.Int(&BUFFER_SIZE, "b", "buffer-size", buffer_help)
-	distance_matrix.String(&COLUMN_DELIMITER, "c", "column-delimiter", "Column delimiter")
+	distance_matrix.String(&COLUMN_DELIMITER, "c", "column-delimiter", "Column delimiter, default value is a tab character")
 	distance_matrix.String(&MISSING_ALLELE_STRING, "m", "missing-allele-character", "String denoting missing alleles.")
 
 	convert_matrix = flaggy.NewSubcommand("convert")
@@ -72,7 +72,7 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	thread_limit_help := fmt.Sprintf("Limit the number of goroutines run at one time. Default: %d", FM_THREAD_LIMIT)
 	fast_match.String(&INPUT_PROFILE, "i", "input", "File path to profiles for querying.")
 	fast_match.String(&REFERENCE_PROFILES, "r", "reference", "File path to reference profiles to query against.")
-	fast_match.String(&COLUMN_DELIMITER, "c", "column-delimiter", "Column delimiter")
+	fast_match.String(&COLUMN_DELIMITER, "c", "column-delimiter", "Column delimiter, default value is a tab character")
 	fast_match.String(&MISSING_ALLELE_STRING, "m", "missing-allele-character", "String denoting missing alleles.")
 	fast_match.Int(&DIST_FUNC, "d", "distance", distance_func_help)
 	fast_match.Float64(&MATCH_THRESHOLD, "t", "threshold", "Threshold for matching alleles.")

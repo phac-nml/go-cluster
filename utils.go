@@ -28,11 +28,10 @@ func CreateOutputBuffer(file_in string) (*bufio.Writer, os.File) {
 	return f, file
 }
 
-/*
-Split a profile lines on columns
+/* Split a profile lines on columns
 */
 func SplitLine(string_in string, new_line_char string, line_delimiter string) *[]string {
-	output := strings.Split(strings.TrimSuffix(string_in, new_line_char), line_delimiter)
+	output := strings.Split(strings.TrimRight(string_in, new_line_char), line_delimiter)
 	return &output
 }
 

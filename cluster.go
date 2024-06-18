@@ -58,6 +58,8 @@ func GetLinkageMethod(value int) string {
 		linkage_method = single
 	case ward.match_value:
 		linkage_method = ward
+	default:
+		log.Fatalf("Invalid linkage method specified: %d", value)
 	}
 	return linkage_method.identifier
 }

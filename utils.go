@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 )
+
 const MissingAlleleValue int = 0
 
 // Create an output buffer for writing too, if no input file is passed stdout will be used.
@@ -32,7 +33,6 @@ func SplitLine(string_in string, new_line_char string, line_delimiter string) *[
 	return &output
 }
 
-
 // Users will expect a given distance matrix to have either decimals or just scalar values.
 // Depending on the distance function used, To truncate the values accordingly the format string
 // for Sprintf is returned by this function.
@@ -46,11 +46,11 @@ func GetFormatString() string {
 
 // Create profiles for data profiles
 func CreateProfiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_line_char string, line_delimiter string, missing_value string) *[]*Profile {
-	
+
 	var data []*Profile
 	for file_scanner.Scan() {
 		input_text := SplitLine(file_scanner.Text(), new_line_char, line_delimiter)
-		data_in := make([]int, len(*input_text)-1)         // Create an array to populate
+		data_in := make([]int, len(*input_text)-1) // Create an array to populate
 		new_profile := LineToProfile(input_text, &data_in, lookup, &missing_value)
 		data = append(data, new_profile) // pop data back array
 	}
@@ -62,7 +62,6 @@ func CreateProfiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_l
 	return &data
 }
 
-
 // Convert a text line into a profile use in distance calculations
 func LineToProfile(input_text *[]string, data_in *[]int, lookup *[]*ProfileLookup, missing_value *string) *Profile {
 
@@ -71,7 +70,7 @@ func LineToProfile(input_text *[]string, data_in *[]int, lookup *[]*ProfileLooku
 	for f, x := range input_data[1:len(input_data)] {
 		if no_allele != x {
 			(*data_in)[f] = (*lookup)[f].InsertValue(&x)
-		}else {
+		} else {
 			(*data_in)[f] = MissingAlleleValue
 		}
 	}

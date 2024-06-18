@@ -27,7 +27,6 @@ var distance_functions = []DistFunc{ham, ham_missing, scaled, scaled_missing}
 
 var DIST_FUNC = 0 // Distance function default
 
-
 // Hamming distance with missing values not counted as differences
 func HammingDistance(profile_1 *[]int, profile_2 *[]int) float64 {
 
@@ -48,7 +47,6 @@ func HammingDistance(profile_1 *[]int, profile_2 *[]int) float64 {
 	}
 	return float64(count)
 }
-
 
 // Returns hamming distance, with missing values counted as differences
 func HammingDistanceMissing(profile_1 *[]int, profile_2 *[]int) float64 {
@@ -74,7 +72,7 @@ func ScaledDistance(profile_1 *[]int, profile_2 *[]int) float64 {
 	profile_len := len(p1)
 	default_return := 100.0
 	for idx := 0; idx < profile_len; idx++ {
-		if (p1[idx] * p2[idx]) == MissingAlleleValue{
+		if (p1[idx] * p2[idx]) == MissingAlleleValue {
 			continue
 		}
 
@@ -94,7 +92,6 @@ func ScaledDistance(profile_1 *[]int, profile_2 *[]int) float64 {
 	}
 	return default_return
 }
-
 
 // Scaled distance with missing data counted as differences.
 func ScaledDistanceMissing(profile_1 *[]int, profile_2 *[]int) float64 {

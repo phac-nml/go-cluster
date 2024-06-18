@@ -173,10 +173,13 @@ The input is a symmetric distance matrix e.g.
 
 and the output is a newick file.
 
-
 ### Fast matching
 
 The input for fast matching is two allelic profiles similar to what is passed when creating a distance matrix. There are some checks in the program to verify that you have the same number of columns but it is **IMPORTANT** That your alleles are in the same order for both of the compared profiles.
+
+# Troubleshooting and FAQs
+
+This program utilizes `go routines` for parallel processing which allows for more threads than logical CPUs. Currently you cannot set the maximum number of CPUs to use in this program as `go routines` will be distributed across CPUs at run time. This can be an issue on grid executors like `slurm` and it is best to run this program on an entire node of a cluster at a time.
 
 # Other information
 

@@ -18,6 +18,7 @@ var hamming_dist_tests = []addTest{
 	addTest{[]int{1, 2, 3, 4}, []int{1, 2, 3, 4}, float64(0), float64(0)},
 	addTest{[]int{2, 1, 1, 2}, []int{2, 2, 2, 2}, float64(2), float64(2)},
 	addTest{[]int{2, 0, 0, 2}, []int{2, 0, 0, 2}, float64(0), float64(0)},
+	addTest{[]int{2, 0, 0, 2}, []int{2, 0, 1, 2}, float64(0), float64(1)},
 	addTest{[]int{1, 1, 1}, []int{2, 2, 2}, float64(3), float64(3)},
 	addTest{[]int{1}, []int{2}, float64(1), float64(1)},
 }

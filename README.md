@@ -76,13 +76,13 @@ distances - Compute all pairwise distances between the specified input profile.
     -l --load-factor                Used to set the minimum number of values needed to use 
 multi-threading. e.g. if (number of cpus * load factor) > number of table rows. Only a single thread will be used.  (default: 100)
     -d --distance                   Enter an integer denoting the distance function you would like to use:
-        Hamming Distance: 0
-        Hamming distance skipping missing values: 1
-        Scaled Distance: 2
-        Scaled distance skipping missing values: 3 (default: 0)
+        Hamming Distance skipping missing values: 0
+        Hamming distance missing values treated as alleles.: 1
+        Scaled Distance skipping missing values: 2
+        Scaled distance missing values treated as alleles.: 3 (default: 0)
     -o --output                     Name of output file. If nothing is specified results will be sent to stdout.
     -b --buffer-size                The default buffer size is: 16384. Larger buffers may increase performance. (default: 16384)
-    -c --column-delimiter           Column delimiter (default:  )
+    -c --column-delimiter           Column delimiter, default value is a tab character (default:        )
     -m --missing-allele-character   String denoting missing alleles. (default: 0)
 ```
 

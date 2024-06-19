@@ -90,15 +90,16 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	flaggy.AttachSubcommand(tree, 1)
 	flaggy.AttachSubcommand(fast_match, 1)
 	flaggy.Parse()
-
-	if len(os.Args) <= 1 {
-		flaggy.ShowHelpAndExit("No inputs passed")
-	}
+	
 }
 
 func main() {
-	//	Parallel distances
 	cli()
+	// Quit if not enough args passed
+	if len(os.Args) <= 1 {
+		flaggy.ShowHelpAndExit("No inputs passed")
+	}
+
 	output_buffer, file_out := CreateOutputBuffer(OUTPUT_FILE)
 	defer file_out.Close()
 

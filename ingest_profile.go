@@ -28,13 +28,22 @@ func NewProfile(name string, profile *[]int) *Profile {
 }
 
 // A utility function for creating a new bufio.Scanner the same way each time.
-func _create_scanner(file_path string) (*bufio.Scanner, *os.File) {
+func _create_scanner(file_path string, new_line_char string) (*bufio.Scanner, *os.File) {
+	
+	header_chars := GetHeaderSize(file_path, new_line_char)
+	log.Println("Determined header file size.")
 	file, err := os.Open(file_path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	scanner := bufio.NewScanner(file) // ! Caps out at 64k line
+	if header_chars > bufio.MaxScanTokenSize {
+		buffer := make([]byte, header_chars);
+		scanner.Buffer(buffer, header_chars)
+	}
+	log.Println("Created file scanner.")
+
 	return scanner, file
 }
 
@@ -44,7 +53,12 @@ profile to create a Map for each column. This allows for a unique identifier to 
 value passed into the program regardless of its format as the Map uses strings for its key values.
 */
 func InitializeLookup(scanner *bufio.Scanner, new_line_char string, line_delimiter string) (*[]*ProfileLookup, *[]string) {
+	
 	first_line := scanner.Scan() // get header line
+	scanner_err := scanner.Err();
+	if scanner_err != nil {
+		log.Printf("%+v, increasing buffer size for scanner.", scanner.Err());
+	}
 	if !first_line {
 		log.Fatal("Input File appears to be empty.")
 	}
@@ -67,7 +81,8 @@ a unique ID per a column input.
 func LoadProfile(file_path string) *[]*Profile {
 	new_line_char := NEWLINE_CHARACTER
 	line_delimiter := COLUMN_DELIMITER
-	file_scanner, file := _create_scanner(file_path)
+	log.Printf("Column Delimiter used: %s", line_delimiter)
+	file_scanner, file := _create_scanner(file_path, new_line_char)
 	defer file.Close()
 	//var data []*Profile;
 	log.Println("Ingesting profile and normalizing allele inputs.")
@@ -95,8 +110,9 @@ func LoadProfiles(reference_profiles string, query_profiles string) (*[]*Profile
 	var missing_value string = MISSING_ALLELE_STRING
 	new_line_char := NEWLINE_CHARACTER
 	line_delimiter := COLUMN_DELIMITER
-	reference_scanner, ref_file := _create_scanner(reference_profiles)
-	query_scanner, query_file := _create_scanner(query_profiles)
+	log.Printf("Column Delimiter used: %s", line_delimiter)
+	reference_scanner, ref_file := _create_scanner(reference_profiles, new_line_char)
+	query_scanner, query_file := _create_scanner(query_profiles, new_line_char)
 	defer ref_file.Close()
 	defer query_file.Close()
 
@@ -144,7 +160,7 @@ Ingest a previously generated symmetric data matrix for use in clustering. All d
 within the matrix will be cast into a float.
 */
 func IngestMatrix(input string) ([][]float64, []string) {
-	scanner, _ := _create_scanner(input)
+	scanner, _ := _create_scanner(input, NEWLINE_CHARACTER)
 	scanner.Scan() // Throw away first line
 	var matrix [][]float64
 	var ids []string

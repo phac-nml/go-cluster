@@ -47,7 +47,7 @@ func GetFormatString() string {
 
 // Get The size of the first line to determine the maximum amount of charactars to hold.
 func GetHeaderSize(file_path string, new_line_char string) int { 
-	var header_increase_size = 2
+	var header_increase_size = 8
 	file, err := os.Open(file_path)
 	if err != nil {
 		log.Fatal(err)

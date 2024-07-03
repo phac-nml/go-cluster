@@ -132,6 +132,12 @@ func LoadProfiles(reference_profiles string, query_profiles string) (*[]*Profile
 
 	query_data := CreateProfiles(query_scanner, normalization_lookup, new_line_char, line_delimiter, missing_value)
 
+	// Append query profiles to reference profiles
+	for _, query_profile := range *query_data {
+		*ref_data = append(*ref_data, query_profile); // Copying to reference should work here as we only ever read and do not write
+	}
+
+
 	normalization_lookup = nil
 	log.Println("Finished ingesting and normalizing profiles.")
 	return ref_data, query_data

@@ -113,16 +113,12 @@ func main() {
 		RunData(&data, output_buffer)
 		log.Println("All threads depleted.")
 		output_buffer.Flush()
-	}
-
-	if convert_matrix.Used {
+	} else if convert_matrix.Used {
 		if len(os.Args) <= 2 {
 			flaggy.ShowHelpAndExit("No commands selected.")
 		}
 		PairwiseToMatrix(INPUT_PROFILE, OUTPUT_FILE)
-	}
-
-	if fast_match.Used {
+	} else if fast_match.Used {
 		if len(os.Args) <= 2 {
 			flaggy.ShowHelpAndExit("No commands selected.")
 		}
@@ -131,9 +127,7 @@ func main() {
 		}
 		IdentifyMatches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, output_buffer)
 		output_buffer.Flush()
-	}
-
-	if tree.Used {
+	} else if tree.Used {
 		if len(os.Args) <= 2 {
 			flaggy.ShowHelpAndExit("No commands selected.")
 		}
@@ -145,6 +139,8 @@ func main() {
 		}
 		Cluster(INPUT_PROFILE, LINKAGE_METHOD, output_buffer)
 		output_buffer.Flush()
+	} else {
+		flaggy.ShowHelpAndExit("Could not identify command used.")
 	}
 
 	log.Println("Done")

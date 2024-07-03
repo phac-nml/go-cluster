@@ -20,11 +20,8 @@
 
 # Introduction
 
-This program is created to supply a user with the ability to quickly create distance matrices of allelic profiles through the use of parallel processing. The program defaults to printing pairwise distances in "molten" or flat format where distances are labeled side-by-side. But a utility to quickly convert this molten format to a distance matrix is built into `pdists. Created distance matrices can be used to cluster the data and output dendrograms. Querying a reference set of profiles against a large set in parallel is supported as well
+This program is created to supply a user with the ability to quickly create distance matrices of allelic profiles through the use of parallel processing. The program prints pairwise distances in a "molten" or flat format where distances are labeled as "sample1 sample2 distance". But a utility to quickly convert this molten format to a distance matrix is built into `pdists`. Created distance matrices can be used to cluster the data and output dendrograms. Querying a reference set of profiles against a larger set of profiles in parallel is supported as well.
 
-## Citation
-
-*Include how to cite the tool*
 ## Contact
 
 [Matthew Wells] : <matthew.wells@phac-aspc.gc.ca>

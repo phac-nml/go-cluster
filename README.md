@@ -20,7 +20,7 @@
 
 # Introduction
 
-This program is created to supply a user with the ability to quickly create distance matrices of allelic profiles through the use of parallel processing. The program prints pairwise distances in a "molten" or flat format where distances are labeled as "sample1 sample2 distance". But a utility to quickly convert this molten format to a distance matrix is built into `pdists`. Created distance matrices can be used to cluster the data and output dendrograms. Querying a reference set of profiles against a larger set of profiles in parallel is supported as well.
+This program is created to supply a user with the ability to quickly create distance matrices of allelic profiles through the use of parallel processing. The program prints pairwise distances in a "molten" or flat format where distances are labeled as "sample1 sample2 distance". But a utility to quickly convert this molten format to a distance matrix is built into `go-cluster`. Created distance matrices can be used to cluster the data and output dendrograms. Querying a reference set of profiles against a larger set of profiles in parallel is supported as well.
 
 ## Contact
 
@@ -30,11 +30,11 @@ This program is created to supply a user with the ability to quickly create dist
 
 No install is currently provided, the program must be compiled using either the `go` toolchain or `gogcc` compiler. This program of go was built using version 1.1.8 as listed in the `go.mod` file. Required dependencies are listed in the `go.mod` file, however their installation is controlled by the `go` toolchain. Instructions for installing `go` can be found here [go](https://go.dev/doc/install), Go can also likely be installed through other packaging programs like conda.
 
-If you have `go` installed, you can simply run `go build` in the source directory and a binary file called `pdists` will be generated.
+If you have `go` installed, you can simply run `go build` in the source directory and a binary file called `go-cluster` will be generated.
 
 ### Compatibility
 
-`pdists` has only been tested on linux.
+`go-cluster` has only been tested on linux.
 
 # Getting Started
 

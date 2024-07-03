@@ -28,7 +28,7 @@ This program is created to supply a user with the ability to quickly create dist
 
 # Install
 
-No install is currently provided, the program must be compiled using either the `go` toolchain or `gogcc` compiler. This program of go was built using version 1.1.8 as listed in the `go.mod` file. Required dependencies are listed in the `src/go.mod` file, however their installation is controlled by the `go` toolchain. Instructions for installing `go` can be found here [go](https://go.dev/doc/install), Go can also likely be installed through other packaging programs like conda.
+No install is currently provided, the program must be compiled using either the `go` toolchain or `gogcc` compiler. This program of go was built using version 1.1.8 as listed in the `go.mod` file. Required dependencies are listed in the `go.mod` file, however their installation is controlled by the `go` toolchain. Instructions for installing `go` can be found here [go](https://go.dev/doc/install), Go can also likely be installed through other packaging programs like conda.
 
 If you have `go` installed, you can simply run `go build` in the source directory and a binary file called `pdists` will be generated.
 

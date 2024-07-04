@@ -30,6 +30,7 @@ var fast_match *flaggy.Subcommand
 var tree *flaggy.Subcommand
 
 const version string = "0.0.1"
+const integer_required_distance_functions_threshold = 2
 
 func cli() {
 	flaggy.SetName("Parallel Distances")
@@ -90,7 +91,7 @@ multi-threading. e.g. if (number of cpus * load factor) > number of table rows. 
 	flaggy.AttachSubcommand(tree, 1)
 	flaggy.AttachSubcommand(fast_match, 1)
 	flaggy.Parse()
-	
+
 }
 
 func main() {
@@ -122,7 +123,7 @@ func main() {
 		if len(os.Args) <= 2 {
 			flaggy.ShowHelpAndExit("No commands selected.")
 		}
-		if distance_functions[DIST_FUNC].assignment < 2 && MATCH_THRESHOLD < 1 {
+		if distance_functions[DIST_FUNC].assignment < integer_required_distance_functions_threshold && MATCH_THRESHOLD < 1 {
 			flaggy.ShowHelpAndExit("Distance function selected requires a value >1 for selection.")
 		}
 		IdentifyMatches(REFERENCE_PROFILES, INPUT_PROFILE, MATCH_THRESHOLD, output_buffer)

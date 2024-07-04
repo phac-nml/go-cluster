@@ -6,11 +6,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"log"
 	"os"
 	"strings"
-	"bytes"
 )
 
 const MissingAlleleValue int = 0
@@ -46,8 +46,8 @@ func GetFormatString() string {
 }
 
 // Get The size of the first line to determine the maximum amount of charactars to hold.
-func GetHeaderSize(file_path string, new_line_char string) int { 
-	var header_increase_size = 8
+func GetHeaderSize(file_path string, new_line_char string) int {
+	const header_increase_size int = 8
 	file, err := os.Open(file_path)
 	if err != nil {
 		log.Fatal(err)
@@ -62,21 +62,20 @@ func GetHeaderSize(file_path string, new_line_char string) int {
 		if _, err := s.Read(data_buffer); err != nil {
 			if err == io.EOF {
 				log.Fatal("Reached end of file without finding new line character.")
-			}else {
+			} else {
 				log.Fatal(err)
 			}
 		}
 		if bytes.Equal(data_buffer, new_line_bytes) {
 			break
 		}
-		header_len = header_len + len(new_line_bytes);
+		header_len = header_len + len(new_line_bytes)
 	}
 
 	file.Close()
 	return header_len * header_increase_size
 
 }
-
 
 // Create profiles for data profiles
 func CreateProfiles(file_scanner *bufio.Scanner, lookup *[]*ProfileLookup, new_line_char string, line_delimiter string, missing_value string) *[]*Profile {

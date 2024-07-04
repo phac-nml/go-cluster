@@ -102,7 +102,7 @@ func ScaledDistanceMissing(profile_1 *[]int, profile_2 *[]int) float64 {
 	default_return := 100.0
 	profile_len := len(p1)
 	for idx := 0; idx < profile_len; idx++ {
-		if  p1[idx] != p2[idx] { // skip if the same
+		if p1[idx] != p2[idx] { // skip if the same
 			continue
 		}
 		count_match++

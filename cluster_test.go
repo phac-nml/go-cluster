@@ -32,8 +32,8 @@ func TestCluster(t *testing.T) {
 }
 
 type LinkageMethodTest struct {
-	linkage_method int;
-	expected string
+	linkage_method int
+	expected       string
 }
 
 var LinkageMethodTests = []LinkageMethodTest{
@@ -46,8 +46,8 @@ var LinkageMethodTests = []LinkageMethodTest{
 	LinkageMethodTest{6, "ward"},
 }
 
-func TestGetLinkageMethod(t *testing.T){
-	for _, test := range LinkageMethodTests{
+func TestGetLinkageMethod(t *testing.T) {
+	for _, test := range LinkageMethodTests {
 		if output := GetLinkageMethod(test.linkage_method); output != test.expected {
 			t.Errorf("Output not equal to expected %s %s", output, test.expected)
 			t.Errorf("Output %+v", output)

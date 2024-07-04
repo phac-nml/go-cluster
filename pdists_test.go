@@ -4,11 +4,9 @@ import (
 	"testing"
 )
 
-
 // Tests for cli
-func Test_cli(t *testing.T){
+func Test_cli(t *testing.T) {
 
-	
 	cli()
 	if distance_matrix.Used {
 		t.Error("Distance matrix should not have been used.")

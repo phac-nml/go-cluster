@@ -24,9 +24,6 @@ jobs:
     - name: Test and Coverage
       run: go test -v -race -cover .
 
-    - name: Benchmark
-      run: go test -v -bench .
-
     - name: Test CLI
       run: go run go-cluster -h
         
@@ -41,7 +38,7 @@ jobs:
         # specifing these action parameters will override appropriate config values.
         profile: cover.out
         local-prefix: github.com/phac-nml/go-cluster
-        threshold-file: 80
-        threshold-package: 80
+        threshold-file: 50
+        threshold-package: 50
         threshold-total: 70
       

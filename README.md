@@ -1,4 +1,4 @@
-
+![coverage](https://raw.githubusercontent.com/phac-nml/go-cluster/badges/.badges/main/coverage.svg)
 
 # go-cluster
 

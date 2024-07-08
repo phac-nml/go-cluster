@@ -1,0 +1,16 @@
+# github.com/integrii/flaggy v1.5.2
+## explicit; go 1.12
+github.com/integrii/flaggy
+# github.com/knightjdr/hclust v1.0.2
+## explicit
+github.com/knightjdr/hclust
+github.com/knightjdr/hclust/cluster
+github.com/knightjdr/hclust/dendrogram
+github.com/knightjdr/hclust/distance
+github.com/knightjdr/hclust/matrixop
+github.com/knightjdr/hclust/optimize
+github.com/knightjdr/hclust/sort
+github.com/knightjdr/hclust/tree
+github.com/knightjdr/hclust/typedef
+# github.com/spf13/pflag v1.0.5
+## explicit; go 1.12

@@ -1,4 +1,5 @@
 ![coverage](https://raw.githubusercontent.com/phac-nml/go-cluster/badges/.badges/main/coverage.svg)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # go-cluster
 

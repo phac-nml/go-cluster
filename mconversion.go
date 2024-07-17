@@ -189,6 +189,10 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	mask := make_mask(longest_val)
 	pad_len := int64(len(mask))
 
+	/*
+		For optimizing the outputs, an AVL tree can be used to a balance them as the
+		positions used are calculated. Then the buffer can be purged afterwards.
+	*/
 	rows := modulus_64
 	for {
 		rl, err := reader.ReadString('\n')

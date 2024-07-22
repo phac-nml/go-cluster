@@ -23,7 +23,7 @@ For creating file in memory:
 
 TODO Create buffer for to contain sorted writes
 TODO write to array in parallel, then sort to create sequential writes to a file
-	- This is currently no in parallel, but a buffer can be written to sorting writes output writes
+	- This is currently not in parallel, but a buffer can be written to sorting writes output writes
 
 
 apparently file systems to not like writing to files in parallel

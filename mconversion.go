@@ -63,6 +63,12 @@ const (
 	separator      = '\t'
 )
 
+type WriteValue struct {
+	key int
+	value *string
+	index int
+}
+
 func open_file(file_path string, open_type int) *os.File {
 	file, err := os.OpenFile(file_path, int(open_type), 0o666)
 	if err != nil {

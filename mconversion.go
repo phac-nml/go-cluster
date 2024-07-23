@@ -290,7 +290,6 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		// * name pad_len should only be applied to one value, this will differ for the top row
 		heap.Push(&write_heap, &WriteValue{key: sp1 * pad_len, value: string_val, index: 0})
 		heap.Push(&write_heap, &WriteValue{key: sp2 * pad_len, value: string_val, index: 0})
-		// TODO need to set a process to empty heap when full
 		//b1, err := output.WriteAt(string_val, (sp1 * pad_len)) // increasing by one pad for label name
 		//_ = b1
 		//if err != nil {
@@ -303,6 +302,7 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		//	log.Fatal(err)
 		//}
 	}
+	// TODO missing some outputs on larger files now
 	if write_heap.Len() > 0 {
 		WriteQueueToFile(&write_heap, output)
 	}

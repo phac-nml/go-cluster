@@ -59,3 +59,5 @@ func TestWriteQueue(t *testing.T){
 		}
 	}
 }
+
+// TODO need to benchmark heap vs append to array and sort

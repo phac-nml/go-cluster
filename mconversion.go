@@ -168,6 +168,18 @@ func make_mask(modulus int) []byte {
 	return mask
 }
 
+func WriteQueueToFile(queue *WriteQueue, output_file *os.File) {
+	output_file.Seek(0, io.SeekStart)
+	for queue.Len() > 0 {
+		output_value := heap.Pop(queue).(*WriteValue)
+		name_out, err := output_file.WriteAt(output_value.value, output_value.key)
+		_ = name_out
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
 func write_matrix(input_path string, output_path string, positions *map[string]int, longest_val int) {
 	/*
 
@@ -206,6 +218,10 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	*/
 	rows := modulus_64
 	for {
+		if write_heap.Len() == buffered_writes {
+			WriteQueueToFile(&write_heap, output)
+		}
+
 		rl, err := reader.ReadString('\n')
 		if err != nil {
 			break
@@ -286,6 +302,9 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		//if err != nil {
 		//	log.Fatal(err)
 		//}
+	}
+	if write_heap.Len() > 0 {
+		WriteQueueToFile(&write_heap, output)
 	}
 
 	// Add byte mask to start of file, to prevent binary inclusion

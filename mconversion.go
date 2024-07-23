@@ -66,7 +66,7 @@ const (
 type WriteValue struct {
 	key int
 	value *string
-	index int
+	index int // needed to update the heap interface
 }
 
 func open_file(file_path string, open_type int) *os.File {

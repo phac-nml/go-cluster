@@ -7,15 +7,14 @@ import (
 	"testing"
 	"container/heap"
 	"reflect"
-	"fmt"
 )
 
 type WriteValueT struct {
 	value []WriteValue
-	expected []int
+	expected []int64
 }
 
-var s func(s string) *string = func(s string) *string { return &s } // Prop to make string
+var s func(s string) []byte = func(s string) []byte { return []byte(s) } // Prop to make string
 
 var QueueWriteTests = []WriteValueT{
 	WriteValueT{
@@ -25,7 +24,7 @@ var QueueWriteTests = []WriteValueT{
 			WriteValue{3, s("3"), 3},
 			WriteValue{4, s("4"), 4},
 		},
-		[]int{0, 2, 3, 4}, // Need to add behaviour for the offset in the writes
+		[]int64{0, 2, 3, 4},
 	}, 
 	WriteValueT{
 		[]WriteValue{
@@ -35,7 +34,7 @@ var QueueWriteTests = []WriteValueT{
 			WriteValue{3, s("3"), 3},
 			WriteValue{4, s("4"), 4},
 		},
-		[]int{0, 2, 2, 3, 4}, // Need to add behaviour for the offset in the writes
+		[]int64{0, 2, 2, 3, 4}, // Need to add behaviour for the offset in the writes
 	},
 }
 
@@ -49,7 +48,7 @@ func TestWriteQueue(t *testing.T){
 		}
 
 		heap.Init(&wheap)
-		outputs := make([]int, 0, len(test.value))
+		outputs := make([]int64, 0, len(test.value))
 		for wheap.Len() > 0 {
 			item := heap.Pop(&wheap).(*WriteValue)
 			outputs = append(outputs, item.key)

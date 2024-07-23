@@ -6,11 +6,6 @@
 
 package main 
 
-import (
-	_ "container/heap"
-)
-
-
 type WriteQueue []*WriteValue
 
 func (h WriteQueue) Len() int {return len(h)}

@@ -303,8 +303,6 @@ func calculate_buffer_position(p1 int, p2 int, modulus int) int64 {
 
 		e.g. to get rows (p1) * modulus + p2 (columns) and flip the location for the other value
 	*/
-	//fmt.Fprintf(os.Stdout, "%d %d\n", p1, p2)
-	// TODO need to incorporate the profile name in this output
 	return int64((p1 * modulus) + p2)
 }
 

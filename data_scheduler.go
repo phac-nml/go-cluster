@@ -119,7 +119,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	arr_pos := 1
 	format_expression := GetFormatString()
 
-	// TODO can create a pool of go routines and pass the profile to compare to each channel
+	// TODO redistribute threads at run time
 	var wg sync.WaitGroup
 	for g := range data[0:] {
 		profile_comp := data[g] // copy struct for each thread

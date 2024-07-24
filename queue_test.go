@@ -1,16 +1,15 @@
 // Test for heap writes
 
-
 package main
 
 import (
-	"testing"
 	"container/heap"
 	"reflect"
+	"testing"
 )
 
 type WriteValueT struct {
-	value []WriteValue
+	value    []WriteValue
 	expected []int64
 }
 
@@ -25,7 +24,7 @@ var QueueWriteTests = []WriteValueT{
 			WriteValue{4, s("4"), 4},
 		},
 		[]int64{0, 2, 3, 4},
-	}, 
+	},
 	WriteValueT{
 		[]WriteValue{
 			WriteValue{0, s("1"), 1},
@@ -38,10 +37,10 @@ var QueueWriteTests = []WriteValueT{
 	},
 }
 
-func TestWriteQueue(t *testing.T){
+func TestWriteQueue(t *testing.T) {
 
 	for _, test := range QueueWriteTests {
-		
+
 		wheap := make(WriteQueue, len(test.value))
 		for idx, _ := range test.value {
 			wheap[idx] = &test.value[idx]
@@ -53,7 +52,7 @@ func TestWriteQueue(t *testing.T){
 			item := heap.Pop(&wheap).(*WriteValue)
 			outputs = append(outputs, item.key)
 		}
-		
+
 		if !reflect.DeepEqual(outputs, test.expected) {
 			t.Errorf("Output: does not match expected %v %v", outputs, test.expected)
 		}

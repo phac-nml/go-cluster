@@ -64,6 +64,8 @@ const (
 	separator      = '\t'
 )
 
+/// This value is set up so that values can be stored before writing out to disc
+/// The index field is used exclusively by the min-heap structure as it is needed in some of its operations
 type WriteValue struct {
 	key int64
 	value []byte

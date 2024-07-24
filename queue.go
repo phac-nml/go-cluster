@@ -6,6 +6,7 @@
 
 package main 
 
+/// Creating a queue using a min-heap in order to make writes to out to the file system sequential instead of relying on random access
 type WriteQueue []*WriteValue
 
 func (h WriteQueue) Len() int {return len(h)}

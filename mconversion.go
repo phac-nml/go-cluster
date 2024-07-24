@@ -306,18 +306,6 @@ func calculate_buffer_position(p1 int, p2 int, modulus int) int64 {
 	return int64((p1 * modulus) + p2)
 }
 
-func print_buffer(buffer *[]int, modulus int, buff_size int) {
-	// ! This will go once memory mapping is implemented
-	fmt.Fprintf(os.Stdout, "\n")
-	for i := 1; i < buff_size; i++ {
-		fmt.Fprintf(os.Stdout, "%d\t", (*buffer)[i-1])
-		if i%modulus == 0 {
-			fmt.Fprintf(os.Stdout, "\n")
-		}
-	}
-	fmt.Fprintf(os.Stdout, "\n")
-}
-
 /*
 Function used to create a pairwise distance matrix from a previously generated molten output.
 */

@@ -47,6 +47,7 @@ package main
 
 import (
 	"bufio"
+	"container/heap"
 	"fmt"
 	"io"
 	"log"
@@ -62,6 +63,14 @@ const (
 	comparison_pos = 2
 	separator      = '\t'
 )
+
+// / This value is set up so that values can be stored before writing out to disc
+// / The index field is used exclusively by the min-heap structure as it is needed in some of its operations
+type WriteValue struct {
+	key   int64
+	value []byte
+	index int // needed to update the heap interface
+}
 
 func open_file(file_path string, open_type int) *os.File {
 	file, err := os.OpenFile(file_path, int(open_type), 0o666)
@@ -161,10 +170,22 @@ func make_mask(modulus int) []byte {
 	return mask
 }
 
+func WriteQueueToFile(queue *WriteQueue, output_file *os.File) {
+	output_file.Seek(0, io.SeekStart)
+	for queue.Len() > 0 {
+		output_value := heap.Pop(queue).(*WriteValue)
+		name_out, err := output_file.WriteAt(output_value.value, output_value.key)
+		_ = name_out
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
 func write_matrix(input_path string, output_path string, positions *map[string]int, longest_val int) {
 	/*
 
-		TODO optimize for sequential writes
+		TODO optimize for sequential writes, priority queue is implemented now, to finish off the implementation
 			1. Fill array containing data pairs of output position, and text out
 			2. Sort array on position out
 			3. Subtract difference in location from each sequential write.
@@ -189,12 +210,20 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	mask := make_mask(longest_val)
 	pad_len := int64(len(mask))
 
+	var buffered_writes int = 1000
+	write_heap := make(WriteQueue, 0, buffered_writes) // Set capacity to write buffer size
+	heap.Init(&write_heap)
+
 	/*
 		For optimizing the outputs, an AVL tree can be used to a balance them as the
 		positions used are calculated. Then the buffer can be purged afterwards.
 	*/
 	rows := modulus_64
 	for {
+		if write_heap.Len() == buffered_writes {
+			WriteQueueToFile(&write_heap, output)
+		}
+
 		rl, err := reader.ReadString('\n')
 		if err != nil {
 			break
@@ -213,60 +242,23 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		sp1 := calculate_buffer_position(p1, p2, modulus)
 		sp2 := calculate_buffer_position(p2, p1, modulus)
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Trying to output the profile name in the right spot
-		// Seems to be putting data in the correct spots for each row
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		output.Seek(0, io.SeekStart)
+		// TODO making more writes than nessecary
 		profile_1_name := pad_value(data[profile_1_pos], mask)
-		name_out, err := output.WriteAt(profile_1_name, int64(p1)*modulus_64*pad_len)
-		_ = name_out
-		if err != nil {
-			log.Fatal(err)
-		}
+		heap.Push(&write_heap, &WriteValue{key: int64(p1) * modulus_64 * pad_len, value: profile_1_name, index: 0})
+		heap.Push(&write_heap, &WriteValue{key: int64(p1) * pad_len, value: profile_1_name, index: 0}) // Write the columns position
 
-		// === column 1 position
-		output.Seek(0, io.SeekStart)
-		name_out, err = output.WriteAt(profile_1_name, int64(p1)*pad_len) // column position
-		_ = name_out
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		output.Seek(0, io.SeekStart)
 		profile_2_name := pad_value(data[profile_2_pos], mask)
-		name_out, err = output.WriteAt(profile_2_name, int64(p2)*modulus_64*pad_len)
-		_ = name_out
-		if err != nil {
-			log.Fatal(err)
-		}
+		heap.Push(&write_heap, &WriteValue{key: int64(p2) * modulus_64 * pad_len, value: profile_2_name, index: 0})
+		heap.Push(&write_heap, &WriteValue{key: int64(p2) * pad_len, value: profile_2_name, index: 0}) // Column Position to write
 
-		// column 2 position
-		output.Seek(0, io.SeekStart)
-		name_out, err = output.WriteAt(profile_2_name, int64(p2)*pad_len)
-		_ = name_out
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		// Write at offsets
-		output.Seek(0, io.SeekStart)
 		// * name pad_len should only be applied to one value, this will differ for the top row
-		b1, err := output.WriteAt(string_val, (sp1 * pad_len)) // increasing by one pad for label name
-		_ = b1
-		if err != nil {
-			log.Fatal(err)
-		}
+		heap.Push(&write_heap, &WriteValue{key: sp1 * pad_len, value: string_val, index: 0})
+		heap.Push(&write_heap, &WriteValue{key: sp2 * pad_len, value: string_val, index: 0})
 
-		output.Seek(0, io.SeekStart)
-		b2, err := output.WriteAt(string_val, (sp2 * pad_len))
-		_ = b2
+	}
 
-		if err != nil {
-			log.Fatal(err)
-		}
+	if write_heap.Len() > 0 {
+		WriteQueueToFile(&write_heap, output)
 	}
 
 	// Add byte mask to start of file, to prevent binary inclusion

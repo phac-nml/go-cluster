@@ -48,7 +48,6 @@ package main
 import (
 	"bufio"
 	"container/heap"
-	"fmt"
 	"io"
 	"log"
 	"os"

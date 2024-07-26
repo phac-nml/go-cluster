@@ -150,6 +150,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 
 			}
 			bucket_index++
+			// TODO re-distribute across all cores here, no need to deplete a thread thats not using all resources
 			end := time.Now().Sub(start)
 			thread_depletion_time := fmt.Sprintf("One thread depleted in: %fs", end.Seconds())
 			log.Println(thread_depletion_time)

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path"
 	"testing"
+	"fmt"
 )
 
 type bucket_tests struct {
@@ -53,4 +54,17 @@ func TestRunData(t *testing.T) {
 	if !bytes.Equal(f1, f2) {
 		t.Fatal("Input and output files to not match.")
 	}
+}
+
+
+
+/// Example calculation of the BucketIndices function
+/// Input values are integers of data_length, and then the bucket_size returnting a Bucket struct
+func TestBucketIndicesF(t *testing.T){
+	CPU_LOAD_FACTOR = 1
+	buckets := BucketsIndices(100, 50);
+	fmt.Printf("%v\n", buckets)
+
+	buckets = BucketsIndices(10, 1);
+	fmt.Printf("%v\n", buckets)
 }

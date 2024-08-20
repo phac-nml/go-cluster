@@ -77,7 +77,7 @@ func TestBucketResizing(t *testing.T){
 	number_of_cpus := 10
 	bucket_size := CalculateBucketSize(data_range, number_of_cpus, CPU_LOAD_FACTOR)
 	buckets := BucketsIndices(data_range, bucket_size)
-	fmt.Printf("%v\n", buckets)
+	fmt.Println(buckets)
 	expected_buckets := []Bucket{Bucket{0, 10}, Bucket{10, 20}, Bucket{20, 30}, Bucket{30, 40}, Bucket{40, 50}, Bucket{50, 60}, Bucket{60, 70}, Bucket{70, 80}, Bucket{80, 90}, Bucket{90, 100}}
 	for i := range expected_buckets {
 		if expected_buckets[i].start != buckets[i].start || expected_buckets[i].end != buckets[i].end {
@@ -91,26 +91,21 @@ func TestBucketResizing(t *testing.T){
 		slice[i] = i
 	}
 
-	fmt.Println(slice)
-	//bucket_index := 0
-	//arr_pos := 0
-	len_data := len(slice)
-	for g := range slice[0:]{
+	bucket_index := 0
+	arr_pos := 1
+
+	for  range slice {
 		// inner loop using the bucket of values here
 		// Need to deplete buckets...
-		data_comp := len_data - g
-		//bins := CalculateBucketSize(len_data - g, number_of_cpus, CPU_LOAD_FACTOR)
-		bins := number_of_cpus * CPU_LOAD_FACTOR
-		values_per_bin := data_comp / bins
-		
-		fmt.Println(bins, data_comp, values_per_bin)
-		//quotient, remainder := data_comp / bins, data_comp % bins
-		//fmt.Println(quotient, remainder)
-		//bucket_size = CalculateBucketSize(len_data - g, number_of_cpus, CPU_LOAD_FACTOR)
-		//fmt.Println(bucket_size)
-		//buckets_used := BucketsIndices(len_data - g, bucket_size)
-		//fmt.Println(buckets_used)
 
+		
+		fmt.Println(buckets[bucket_index:])
+		buckets[bucket_index].start++
+		if len(buckets) > 1 && arr_pos%bucket_size == 0 {
+			fmt.Println(bucket_index)
+			bucket_index++
+		}
+		arr_pos++
 	}
 
 

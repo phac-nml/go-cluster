@@ -121,7 +121,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 
 	// TODO redistribute threads at run time
 	var wg sync.WaitGroup
-	for g := range data[0:] {
+	for g := range data {
 		profile_comp := data[g] // copy struct for each thread
 		values_write := make([]*[]*ComparedProfile, len(buckets)-bucket_index)
 		// TODO an incredible optimization here would be to go lockless, or re-use threads

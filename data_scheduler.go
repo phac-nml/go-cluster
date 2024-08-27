@@ -22,21 +22,22 @@ Determine how many bins of the input dataset should be processed when running th
 The bucket size means the x Profiles will be processed by a thread, which will directly
 relate to how many go routines are run at a time.
 */
-func CalculateBucketSize(data_length int, runtime_cpus int, cpu_modifier int) int {
+func CalculateBucketSize(data_length int, minimum_bins int, bucket_increase int) (int, int) {
 
-	if cpu_modifier <= 0 {
-		log.Fatal("CPU modifier must be greater than 0")
+	if minimum_bins == 0 {
+		log.Fatal("You must have a CPU modifier value greater than 0")
 	}
 
-	minimum_bins := runtime_cpus * cpu_modifier
 	bucket_size := data_length / minimum_bins
-	if bucket_size < minimum_bins {
-		for bucket_size < (minimum_bins * 2) {
-			minimum_bins--
-			bucket_size = data_length / minimum_bins
-		}
+	if data_length < bucket_size {
+		return data_length, 1
 	}
-	return bucket_size
+
+	if bucket_size < minimum_bins {
+		bucket_size *= bucket_increase
+		minimum_bins = data_length / bucket_size
+	}
+	return bucket_size, minimum_bins
 }
 
 // A pair containing the start and end values for a given range of data to be processed.
@@ -155,7 +156,8 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	bucket_index := 0
 	empty_name := ""
 	const cpu_modifier = 2
-	bucket_size := CalculateBucketSize(len(data), runtime.NumCPU(), cpu_modifier)
+	minimum_buckets := runtime.NumCPU() * cpu_modifier
+	bucket_size, _ := CalculateBucketSize(len(data), minimum_buckets, cpu_modifier)
 	buckets := BucketsIndices(len(data), bucket_size)
 	arr_pos := 1
 	format_expression := GetFormatString()

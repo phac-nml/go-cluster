@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"fmt"
+	"os"
 	"path"
 	"testing"
-	"fmt"
 )
 
 type bucket_tests struct {
@@ -48,43 +48,42 @@ func TestRunData(t *testing.T) {
 	out_file.Close()
 
 	// Compare outputs line by line
-	f1, _ := ioutil.ReadFile(test_expected_output)
-	f2, _ := ioutil.ReadFile(test_output_file)
+	//f1, _ := ioutil.ReadFile(test_expected_output)
+	f1, _ := os.ReadFile(test_expected_output)
+	f2, _ := os.ReadFile(test_output_file)
 
 	if !bytes.Equal(f1, f2) {
 		t.Fatal("Input and output files to not match.")
 	}
 }
 
-
-
-/// Example calculation of the BucketIndices function
-/// Input values are integers of data_length, and then the bucket_size returnting a Bucket struct
-func TestBucketIndices(t *testing.T){
+// / Example calculation of the BucketIndices function
+// / Input values are integers of data_length, and then the bucket_size returnting a Bucket struct
+func TestBucketIndices(t *testing.T) {
 	CPU_LOAD_FACTOR = 1
-	buckets := BucketsIndices(100, 50);
+	buckets := BucketsIndices(100, 50)
 	fmt.Printf("%v\n", buckets)
 
-	buckets = BucketsIndices(10, 1);
+	buckets = BucketsIndices(10, 1)
 	fmt.Printf("%v\n", buckets)
 }
 
-/// Test redistribution of data across threads
-/// This test simulates the what occurs during the RunData function
-func TestBucketResizing(t *testing.T){
+// / Test redistribution of data across threads
+// / This test simulates the what occurs during the RunData function
+func TestBucketResizing(t *testing.T) {
 	CPU_LOAD_FACTOR = 1
 	data_range := 100
 	number_of_cpus := 10
 	bucket_size := CalculateBucketSize(data_range, number_of_cpus, CPU_LOAD_FACTOR)
 	buckets := BucketsIndices(data_range, bucket_size)
 	fmt.Println(buckets)
-	expected_buckets := []Bucket{Bucket{0, 10}, Bucket{10, 20}, Bucket{20, 30}, Bucket{30, 40}, Bucket{40, 50}, Bucket{50, 60}, Bucket{60, 70}, Bucket{70, 80}, Bucket{80, 90}, Bucket{90, 100}}
+	expected_buckets := []Bucket{{0, 10}, {10, 20}, {20, 30}, {30, 40}, {40, 50}, {50, 60}, {60, 70}, {70, 80}, {80, 90}, {90, 100}}
 	for i := range expected_buckets {
 		if expected_buckets[i].start != buckets[i].start || expected_buckets[i].end != buckets[i].end {
 			t.Fatal("Mismatched value in expected bucket outputs.")
 		}
 	}
-	
+
 	// Create a test array of values
 	var slice = make([]int, data_range)
 	for i := range slice {
@@ -94,11 +93,10 @@ func TestBucketResizing(t *testing.T){
 	bucket_index := 0
 	arr_pos := 1
 
-	for  range slice {
+	for range slice {
 		// inner loop using the bucket of values here
 		// Need to deplete buckets...
 
-		
 		fmt.Println(buckets[bucket_index:])
 		buckets[bucket_index].start++
 		if len(buckets) > 1 && arr_pos%bucket_size == 0 {
@@ -108,5 +106,63 @@ func TestBucketResizing(t *testing.T){
 		arr_pos++
 	}
 
+}
+
+// Testing an alternate method for generating compute indices
+func TestBucketsGeneration(t *testing.T) {
+	var cpus int = 6
+	var profile_sizes int = 100
+	CPU_LOAD_FACTOR = 1
+	minimum_bucket_size := 10
+	buckets := CalculateBucketSize(profile_sizes, cpus, CPU_LOAD_FACTOR)
+	bucket_indices := CreateBucketIndices(profile_sizes, buckets, 0)
+
+	fmt.Println(buckets)
+	fmt.Println(bucket_indices)
+	bucket_index := 0
+
+	for val := range profile_sizes {
+		bucket_indices[bucket_index].start++
+		if len(bucket_indices) > 1 && bucket_indices[bucket_index].Diff() < minimum_bucket_size {
+			buckets = CalculateBucketSize(profile_sizes-val, cpus, CPU_LOAD_FACTOR)
+			fmt.Println(buckets)
+			bucket_indices = CreateBucketIndices(profile_sizes-val, buckets, val)
+			fmt.Println(bucket_indices)
+		}
+		fmt.Println(bucket_indices)
+	}
+}
+
+// Testing the redistribution of bucket indices at runtime
+func TestRedistributeBuckets(t *testing.T) {
+	var profile_size int = 100
+	var cpus int = 6
+	CPU_LOAD_FACTOR = 2
+	minimum_bucket_size := 5
+	buckets := CalculateBucketSize(profile_size-1, cpus, CPU_LOAD_FACTOR)
+	bucket_indices := CreateBucketIndices(profile_size-1, buckets, 0)
+
+	comparisons := make([][]int, profile_size)
+	for idx := range comparisons {
+		comparisons[idx] = make([]int, 0)
+	}
+
+	for val := range profile_size {
+		for _, b := range bucket_indices {
+			for i := b.start; i < b.end; i++ {
+				comparisons[val] = append(comparisons[val], i)
+			}
+		}
+		bucket_indices[0].start++
+		if bucket_indices[0].Diff() < minimum_bucket_size {
+			buckets = CalculateBucketSize(profile_size-val, cpus, CPU_LOAD_FACTOR)
+			bucket_indices = CreateBucketIndices(profile_size-1, buckets, val)
+		}
+		//fmt.Println(val, bucket_indices)
+	}
+
+	for idx := range profile_size {
+		fmt.Println(idx, len(comparisons[idx]))
+	}
 
 }

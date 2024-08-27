@@ -26,7 +26,16 @@ func CalculateBucketSize(data_length int, runtime_cpus int, cpu_modifier int) in
 	if cpu_modifier <= 0 {
 		log.Fatal("CPU modifier must be greater than 0")
 	}
-	bucket_size := data_length / (runtime_cpus * cpu_modifier)
+	minimum_bins := runtime_cpus * cpu_modifier
+
+	bucket_size := data_length / minimum_bins
+
+	if bucket_size < minimum_bins {
+		for bucket_size < minimum_bins {
+			minimum_bins--
+			bucket_size = data_length / minimum_bins
+		}
+	}
 	return bucket_size
 }
 
@@ -35,10 +44,42 @@ type Bucket struct {
 	start, end int
 }
 
+// Get the difference in indices between the two bucket fields
+func (t *Bucket) Diff() int {
+	return t.end - t.start
+}
+
 // The distance metric for a given comparison
 type ComparedProfile struct {
 	compared, reference *string
 	distance            float64
+}
+
+// Calculate the initial bin sizes to use for running profiles in parallel
+func CreateBucketIndices(data_length int, bucket_size int, modifier int) []Bucket {
+	var buckets []Bucket
+
+	if (data_length-modifier) < bucket_size || bucket_size > data_length {
+		// Just return the one set of indices the values are small enough
+		buckets = append(buckets, Bucket{modifier, data_length})
+		return buckets
+	}
+
+	for i := (bucket_size + modifier); i < data_length; i = i + bucket_size {
+		new_bucket := Bucket{i - bucket_size, i}
+		buckets = append(buckets, new_bucket)
+	}
+
+	final_start := buckets[len(buckets)-1].end
+	final_end := data_length
+
+	if final_end-final_start < bucket_size {
+		// Extend the last index if required if it is very small
+		buckets[len(buckets)-1].end = data_length
+	} else {
+		buckets = append(buckets, Bucket{final_start, final_end})
+	}
+	return buckets
 }
 
 /*
@@ -151,7 +192,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			}
 			bucket_index++
 			// TODO re-distribute across all cores here, no need to deplete a thread thats not using all resources
-			end := time.Now().Sub(start)
+			end := time.Since(start)
 			thread_depletion_time := fmt.Sprintf("One thread depleted in: %fs", end.Seconds())
 			log.Println(thread_depletion_time)
 			start = time.Now()

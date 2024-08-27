@@ -1,6 +1,6 @@
 module go-cluster
 
-go 1.18
+go 1.22
 
 require (
 	github.com/integrii/flaggy v1.5.2 // indirect

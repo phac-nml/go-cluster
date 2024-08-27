@@ -23,15 +23,15 @@ The bucket size means the x Profiles will be processed by a thread, which will d
 relate to how many go routines are run at a time.
 */
 func CalculateBucketSize(data_length int, runtime_cpus int, cpu_modifier int) int {
+
 	if cpu_modifier <= 0 {
 		log.Fatal("CPU modifier must be greater than 0")
 	}
+
 	minimum_bins := runtime_cpus * cpu_modifier
-
 	bucket_size := data_length / minimum_bins
-
 	if bucket_size < minimum_bins {
-		for bucket_size < minimum_bins {
+		for bucket_size < (minimum_bins * 2) {
 			minimum_bins--
 			bucket_size = data_length / minimum_bins
 		}

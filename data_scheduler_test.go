@@ -138,7 +138,7 @@ func TestRedistributeBuckets(t *testing.T) {
 	var profile_size int = 100
 	var cpus int = 6
 	CPU_LOAD_FACTOR = 2
-	minimum_bucket_size := 5
+	//minimum_bucket_size := cpus * CPU_LOAD_FACTOR
 	buckets := CalculateBucketSize(profile_size-1, cpus, CPU_LOAD_FACTOR)
 	bucket_indices := CreateBucketIndices(profile_size-1, buckets, 0)
 
@@ -153,16 +153,23 @@ func TestRedistributeBuckets(t *testing.T) {
 				comparisons[val] = append(comparisons[val], i)
 			}
 		}
-		bucket_indices[0].start++
-		if bucket_indices[0].Diff() < minimum_bucket_size {
+
+		if bucket_indices[0].Diff() == 1 {
 			buckets = CalculateBucketSize(profile_size-val, cpus, CPU_LOAD_FACTOR)
 			bucket_indices = CreateBucketIndices(profile_size-1, buckets, val)
+			fmt.Println(val, bucket_indices)
 		}
-		//fmt.Println(val, bucket_indices)
+		bucket_indices[0].start++
+
 	}
 
+	corrected_profile_size := profile_size - 1
 	for idx := range profile_size {
 		fmt.Println(idx, len(comparisons[idx]))
+		if len(comparisons[idx]) != corrected_profile_size {
+			t.Fatalf("Mismatched number of outputs for entry for index %d: %d != %d", idx, corrected_profile_size, len(comparisons[idx]))
+		}
+		corrected_profile_size--
 	}
 
 }

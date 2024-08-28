@@ -134,7 +134,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 
 	bucket_index := 0
 	empty_name := ""
-	const cpu_modifier = 3
+	cpu_modifier := BUCKET_SCALE
 	data_size := len(data)
 	minimum_buckets := runtime.NumCPU() * cpu_modifier
 	bucket_size, _ := CalculateBucketSize(data_size, minimum_buckets, cpu_modifier)
@@ -175,7 +175,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			initial_bucket_location = buckets[0].start
 			buckets[0].start++ // start index is reserved so needs to be incremented
 			end := time.Since(start)
-			thread_depletion_time := fmt.Sprintf("Redistributing data across threads. %fs", end.Seconds())
+			thread_depletion_time := fmt.Sprintf("Redistributing data across %d threads processed %d/%d profiles. %fs", len(buckets), idx, data_size, end.Seconds())
 			log.Println(thread_depletion_time)
 			start = time.Now()
 		}

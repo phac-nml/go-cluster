@@ -100,7 +100,7 @@ func LineToProfile(input_text *[]string, data_in *[]int, lookup *[]*ProfileLooku
 
 	input_data := *input_text
 	no_allele := *missing_value
-	for f, x := range input_data[1:len(input_data)] {
+	for f, x := range input_data[1:] {
 		if no_allele != x {
 			(*data_in)[f] = (*lookup)[f].InsertValue(&x)
 		} else {

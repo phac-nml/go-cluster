@@ -71,7 +71,7 @@ distances - Compute all pairwise distances between the specified input profile.
        --version                    Displays the program version string.
     -h --help                       Displays help with available flag, subcommand, and positional value parameters.
     -i --input                      File path to your alleles profiles.
-    -l --load-factor                This value is used to compute how many profile calculations are assigned to thread, a larger value will result in fewer threads being used. Default: 2 (default: 2)
+    -l --load-factor                This value is used to compute how many profile calculations are assigned to thread, a larger value will result in fewer threads being used. (default: 3)
     -d --distance                   Enter an integer denoting the distance function you would like to use:
         Hamming Distance skipping missing values: 0
         Hamming distance missing values treated as alleles.: 1

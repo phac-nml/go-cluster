@@ -179,8 +179,8 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			log.Println(thread_depletion_time)
 			start = time.Now()
 		}
-
 	}
+
 	wg.Wait()
 	f.Flush()
 }

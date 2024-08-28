@@ -14,7 +14,7 @@ import (
 	"github.com/integrii/flaggy"
 )
 
-var BUCKET_SCALE int = 2
+var BUCKET_SCALE int = 3
 var FM_THREAD_LIMIT int64 = 100
 var COLUMN_DELIMITER = "\t"
 var NEWLINE_CHARACTER = "\n"

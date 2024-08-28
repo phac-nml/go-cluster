@@ -29,6 +29,10 @@ func CalculateBucketSize(data_length int, minimum_bins int, bucket_increase int)
 	}
 
 	bucket_size := (data_length / minimum_bins)
+	if bucket_size == 0 {
+		bucket_size++
+	}
+
 	remainder := data_length % minimum_bins
 
 	if remainder == 0 {
@@ -48,6 +52,7 @@ func CalculateBucketSize(data_length int, minimum_bins int, bucket_increase int)
 		bucket_size *= bucket_increase
 		minimum_bins = data_length / bucket_size
 	}
+
 	return bucket_size, minimum_bins
 }
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path"
 	"testing"
@@ -50,9 +49,34 @@ func TestRunData(t *testing.T) {
 	// Compare outputs line by line
 	f1, _ := os.ReadFile(test_expected_output)
 	f2, _ := os.ReadFile(test_output_file)
-	fmt.Println(string(f2))
 	if !bytes.Equal(f1, f2) {
 		t.Fatal("Input and output files to not match.")
+	}
+}
+
+func TestRunDataSmall(t *testing.T) {
+	tempdir := t.TempDir()
+
+	t.Log("Starting end to end test for distance calculations.")
+	test_input := "TestInputs/DistanceMatrix/Random_2_input.txt"
+	test_output_file := path.Join(tempdir, "output.txt")
+
+	t.Logf("Test Input: %s", test_input)
+	t.Logf("Test Output Temp File: %s", test_output_file)
+	t.Log("Creating output buffer.")
+	out_buffer, out_file := CreateOutputBuffer(test_output_file)
+
+	t.Log("Loading test allele profiles.")
+	test_data := LoadProfile(test_input)
+	RunData(test_data, out_buffer)
+	out_buffer.Flush()
+	out_file.Close()
+
+	// Compare outputs line by line
+	f2, _ := os.ReadFile(test_output_file)
+	output := string(f2)
+	if output != "1 1 0\n" {
+		t.Fatal("Input does not equal output.")
 	}
 }
 

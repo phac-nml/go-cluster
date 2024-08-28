@@ -28,7 +28,18 @@ func CalculateBucketSize(data_length int, minimum_bins int, bucket_increase int)
 		log.Fatal("You must have a CPU modifier value greater than 0")
 	}
 
-	bucket_size := data_length / minimum_bins
+	bucket_size := (data_length / minimum_bins)
+	remainder := data_length % minimum_bins
+
+	if remainder == 0 {
+		/*
+			when the remainder is 0 there is now spill over resulting in a
+			temporary reduction in the number of "bins used". As there is no
+			spill over bin.
+		*/
+		bucket_size--
+	}
+
 	if data_length < bucket_size {
 		return data_length, 1
 	}
@@ -145,7 +156,8 @@ them directly to the passed in bufio.Writer.
 func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	/* Schedule and arrange the calculation of the data in parallel
 	This function is quite large and likely has room for optimization.
-	TODO redistribute data across threads at run time
+
+	Once day an incredible optimization here would be to go lockless, or re-use threads
 	*/
 
 	start := time.Now()
@@ -155,30 +167,30 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 
 	bucket_index := 0
 	empty_name := ""
-	const cpu_modifier = 2
+	const cpu_modifier = 3
+	data_size := len(data)
 	minimum_buckets := runtime.NumCPU() * cpu_modifier
-	bucket_size, _ := CalculateBucketSize(len(data), minimum_buckets, cpu_modifier)
-	buckets := BucketsIndices(len(data), bucket_size)
-	arr_pos := 1
+	bucket_size, _ := CalculateBucketSize(data_size, minimum_buckets, cpu_modifier)
+	buckets := CreateBucketIndices(data_size, bucket_size, 0)
 	format_expression := GetFormatString()
-
-	// TODO redistribute threads at run time
+	initial_bucket_location := buckets[0].start
 	var wg sync.WaitGroup
-	for g := range data {
-		profile_comp := data[g] // copy struct for each thread
+
+	for idx := range data {
+		profile_comp := data[idx] // copy struct for each thread
 		values_write := make([]*[]*ComparedProfile, len(buckets)-bucket_index)
-		// TODO an incredible optimization here would be to go lockless, or re-use threads
-		for i := bucket_index; i < len(buckets); i++ {
-			array_writes := make([]*ComparedProfile, buckets[i].end-buckets[i].start)
-			values_write[i-bucket_index] = &array_writes
+		for b_idx, b := range buckets {
+			array_writes := make([]*ComparedProfile, b.Diff())
+			values_write[b_idx] = &array_writes
 			wg.Add(1)
 			go func(output_array *[]*ComparedProfile, bucket_compute Bucket, profile_compare *Profile) {
 				ThreadExecution(&data, profile_compare, bucket_compute, dist, output_array)
 				wg.Done()
-			}(&array_writes, buckets[i], profile_comp)
+			}(&array_writes, b, profile_comp)
 		}
-		wg.Wait()                     // Wait for everyone to catch up
-		buckets[bucket_index].start++ // update the current buckets tracker
+
+		wg.Wait()          // Wait for everyone to catch up
+		buckets[0].start++ // update the current buckets tracker
 
 		for _, i := range values_write {
 			for _, value := range *i {
@@ -186,20 +198,21 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			}
 		}
 
-		if len(buckets) > 1 && arr_pos%bucket_size == 0 {
-			for f := buckets[bucket_index].end - bucket_size; f < buckets[bucket_index].end; f++ {
-				data[f].profile = nil
-				data[f].name = empty_name
-
+		if len(buckets) != 1 && buckets[0].Diff() < minimum_buckets {
+			bucket_size, minimum_buckets = CalculateBucketSize(data_size-idx, minimum_buckets, cpu_modifier)
+			buckets = CreateBucketIndices(data_size, bucket_size, idx)
+			for index := initial_bucket_location; index < buckets[0].start; index++ {
+				data[index].profile = nil
+				data[index].name = empty_name
 			}
-			bucket_index++
-			// TODO re-distribute across all cores here, no need to deplete a thread thats not using all resources
+			initial_bucket_location = buckets[0].start
+			buckets[0].start++ // start index is reserved so needs to be incremented
 			end := time.Since(start)
-			thread_depletion_time := fmt.Sprintf("One thread depleted in: %fs", end.Seconds())
+			thread_depletion_time := fmt.Sprintf("Redistributing data across threads. %fs", end.Seconds())
 			log.Println(thread_depletion_time)
 			start = time.Now()
 		}
-		arr_pos++
+
 	}
 	wg.Wait()
 	f.Flush()

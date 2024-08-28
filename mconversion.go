@@ -48,7 +48,6 @@ package main
 import (
 	"bufio"
 	"container/heap"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -101,7 +100,7 @@ func get_keys(value *map[string]bool) (*[]string, int) {
 	map_vals := make([]string, len(*value))
 	vals := 0
 	longest_key := 0
-	for k, _ := range *value {
+	for k := range *value {
 		if len(k) > longest_key {
 			longest_key = len(k)
 		}

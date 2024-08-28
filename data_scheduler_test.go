@@ -82,6 +82,7 @@ func TestRunDataSmall(t *testing.T) {
 
 // Testing the redistribution of bucket indices at runtime
 func TestRedistributeBuckets(t *testing.T) {
+	// TODO thread levels are being altered too frequently, need to change som parameters
 	var profile_size int = 100
 	var cpus int = 6
 	BUCKET_SCALE = 2

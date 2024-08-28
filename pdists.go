@@ -8,12 +8,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/integrii/flaggy"
 	"log"
 	"os"
+
+	"github.com/integrii/flaggy"
 )
 
-var CPU_LOAD_FACTOR int = 100
+var BUCKET_SCALE int = 3
 var FM_THREAD_LIMIT int64 = 100
 var COLUMN_DELIMITER = "\t"
 var NEWLINE_CHARACTER = "\n"
@@ -52,10 +53,9 @@ func cli() {
 		scaled_missing.help, scaled_missing.assignment)
 
 	buffer_help := fmt.Sprintf("The default buffer size is: %d. Larger buffers may increase performance.", BUFFER_SIZE)
+	load_factor_help := fmt.Sprintf("This value is used to compute how many profile calculations are assigned to thread, a larger value will result in fewer threads being used. Default: %d", BUCKET_SCALE)
 	distance_matrix.String(&INPUT_PROFILE, "i", "input", "File path to your alleles profiles.")
-	distance_matrix.Int(&CPU_LOAD_FACTOR, "l", "load-factor",
-		`Used to set the minimum number of values needed to use 
-multi-threading. e.g. if (number of cpus * load factor) > number of table rows. Only a single thread will be used. `)
+	distance_matrix.Int(&BUCKET_SCALE, "l", "load-factor", load_factor_help)
 	distance_matrix.Int(&DIST_FUNC, "d", "distance", distance_func_help)
 	distance_matrix.String(&OUTPUT_FILE, "o", "output", "Name of output file. If nothing is specified results will be sent to stdout.")
 	distance_matrix.Int(&BUFFER_SIZE, "b", "buffer-size", buffer_help)

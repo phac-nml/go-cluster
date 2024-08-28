@@ -94,44 +94,6 @@ func CreateBucketIndices(data_length int, bucket_size int, modifier int) []Bucke
 	return buckets
 }
 
-/*
-For a given data set determine the the start and end range of each of the bins to be used.
-e.g. if a dataset has 1000 profiles, and our bucket size is 500 we will create bins with
-an of [0, 500], [500, 1000]
-*/
-func BucketsIndices(data_length int, bucket_size int) []Bucket {
-	var bucks []Bucket
-	cpu_load_factor := CPU_LOAD_FACTOR // Need to add description to global options
-	window := bucket_size
-
-	cpu_load_string := fmt.Sprintf("CPU load factor x%d", cpu_load_factor)
-	log.Println(cpu_load_string)
-
-	if window > data_length {
-		bucks = append(bucks, Bucket{0, data_length})
-		log.Println("Running single threaded as there are too few entries to justify multithreading.")
-		return bucks
-	}
-
-	if data_length < (runtime.NumCPU() * cpu_load_factor) {
-		bucks = append(bucks, Bucket{0, data_length})
-		log.Println("Running single threaded as there are too few entries to justify multithreading.")
-		return bucks
-	}
-
-	for i := window; i < data_length; i = i + window {
-		bucks = append(bucks, Bucket{i - window, i})
-	}
-
-	bucks = append(bucks, Bucket{bucks[len(bucks)-1].end, data_length})
-
-	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks)-1)
-	log.Println(threads_running)
-	profiles_to_thread := fmt.Sprintf("Allocating ~%d profiles per a thread.", window)
-	log.Println(profiles_to_thread)
-	return bucks
-}
-
 // Compute profile differences in a given go routine.
 //
 // data_slice: the data range to use for calculation against the profile to be compared too.

@@ -52,7 +52,6 @@ import (
 	"log"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -86,14 +85,6 @@ func open_file(file_path string, open_type int) *os.File {
 
 	}
 	return file
-}
-
-func parse_int(value string) int {
-	val, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return int(val)
 }
 
 func get_keys(value *map[string]bool) (*[]string, int) {
@@ -287,12 +278,6 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 
 	defer file.Close()
 	defer output.Close()
-}
-
-func calculate_buffer_size(key_len int) int {
-	size := key_len * key_len
-	// TODO need to incorporate the profile name in this output
-	return size
 }
 
 func calculate_buffer_position(p1 int, p2 int, modulus int) int64 {

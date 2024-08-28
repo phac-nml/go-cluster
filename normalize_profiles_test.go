@@ -12,9 +12,9 @@ type value_insertion struct {
 }
 
 var value_insertion_tests = []value_insertion{
-	value_insertion{"test", 1},
-	value_insertion{"test", 1},
-	value_insertion{"test2", 2},
+	{"test", 1},
+	{"test", 1},
+	{"test2", 2},
 }
 
 func TestInsertValue_NewProfile(t *testing.T) {

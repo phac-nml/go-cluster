@@ -16,22 +16,22 @@ type WriteValueT struct {
 var s func(s string) []byte = func(s string) []byte { return []byte(s) } // Prop to make string
 
 var QueueWriteTests = []WriteValueT{
-	WriteValueT{
+	{
 		[]WriteValue{
-			WriteValue{0, s("1"), 1},
-			WriteValue{2, s("2"), 2},
-			WriteValue{3, s("3"), 3},
-			WriteValue{4, s("4"), 4},
+			{0, s("1"), 1},
+			{2, s("2"), 2},
+			{3, s("3"), 3},
+			{4, s("4"), 4},
 		},
 		[]int64{0, 2, 3, 4},
 	},
-	WriteValueT{
+	{
 		[]WriteValue{
-			WriteValue{0, s("1"), 1},
-			WriteValue{2, s("2"), 2},
-			WriteValue{2, s("3"), 2},
-			WriteValue{3, s("3"), 3},
-			WriteValue{4, s("4"), 4},
+			{0, s("1"), 1},
+			{2, s("2"), 2},
+			{2, s("3"), 2},
+			{3, s("3"), 3},
+			{4, s("4"), 4},
 		},
 		[]int64{0, 2, 2, 3, 4}, // Need to add behaviour for the offset in the writes
 	},
@@ -42,7 +42,7 @@ func TestWriteQueue(t *testing.T) {
 	for _, test := range QueueWriteTests {
 
 		wheap := make(WriteQueue, len(test.value))
-		for idx, _ := range test.value {
+		for idx := range test.value {
 			wheap[idx] = &test.value[idx]
 		}
 

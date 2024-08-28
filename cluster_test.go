@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path"
 	"testing"
 )
@@ -24,8 +24,8 @@ func TestCluster(t *testing.T) {
 	output_buffer.Flush()
 	out_file.Close()
 
-	f1, _ := ioutil.ReadFile(output_tree)
-	f2, _ := ioutil.ReadFile(expected_output_tree)
+	f1, _ := os.ReadFile(output_tree)
+	f2, _ := os.ReadFile(expected_output_tree)
 	if !bytes.Equal(f1, f2) {
 		t.Fatal("Input and output files to not match.")
 	}
@@ -37,13 +37,13 @@ type LinkageMethodTest struct {
 }
 
 var LinkageMethodTests = []LinkageMethodTest{
-	LinkageMethodTest{0, "average"},
-	LinkageMethodTest{1, "centroid"},
-	LinkageMethodTest{2, "complete"},
-	LinkageMethodTest{3, "mcquitty"},
-	LinkageMethodTest{4, "median"},
-	LinkageMethodTest{5, "single"},
-	LinkageMethodTest{6, "ward"},
+	{0, "average"},
+	{1, "centroid"},
+	{2, "complete"},
+	{3, "mcquitty"},
+	{4, "median"},
+	{5, "single"},
+	{6, "ward"},
 }
 
 func TestGetLinkageMethod(t *testing.T) {

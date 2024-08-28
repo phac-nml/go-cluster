@@ -23,7 +23,7 @@ For creating file in memory:
 
 TODO Create buffer for to contain sorted writes
 TODO write to array in parallel, then sort to create sequential writes to a file
-	- This is currently no in parallel, but a buffer can be written to sorting writes output writes
+	- This is currently not in parallel, but a buffer can be written to sorting writes output writes
 
 
 apparently file systems to not like writing to files in parallel
@@ -47,12 +47,11 @@ package main
 
 import (
 	"bufio"
-	"fmt"
+	"container/heap"
 	"io"
 	"log"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -62,6 +61,14 @@ const (
 	comparison_pos = 2
 	separator      = '\t'
 )
+
+// / This value is set up so that values can be stored before writing out to disc
+// / The index field is used exclusively by the min-heap structure as it is needed in some of its operations
+type WriteValue struct {
+	key   int64
+	value []byte
+	index int // needed to update the heap interface
+}
 
 func open_file(file_path string, open_type int) *os.File {
 	file, err := os.OpenFile(file_path, int(open_type), 0o666)
@@ -80,19 +87,11 @@ func open_file(file_path string, open_type int) *os.File {
 	return file
 }
 
-func parse_int(value string) int {
-	val, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return int(val)
-}
-
 func get_keys(value *map[string]bool) (*[]string, int) {
 	map_vals := make([]string, len(*value))
 	vals := 0
 	longest_key := 0
-	for k, _ := range *value {
+	for k := range *value {
 		if len(k) > longest_key {
 			longest_key = len(k)
 		}
@@ -161,10 +160,22 @@ func make_mask(modulus int) []byte {
 	return mask
 }
 
+func WriteQueueToFile(queue *WriteQueue, output_file *os.File) {
+	output_file.Seek(0, io.SeekStart)
+	for queue.Len() > 0 {
+		output_value := heap.Pop(queue).(*WriteValue)
+		name_out, err := output_file.WriteAt(output_value.value, output_value.key)
+		_ = name_out
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
 func write_matrix(input_path string, output_path string, positions *map[string]int, longest_val int) {
 	/*
 
-		TODO optimize for sequential writes
+		TODO optimize for sequential writes, priority queue is implemented now, to finish off the implementation
 			1. Fill array containing data pairs of output position, and text out
 			2. Sort array on position out
 			3. Subtract difference in location from each sequential write.
@@ -189,8 +200,20 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	mask := make_mask(longest_val)
 	pad_len := int64(len(mask))
 
+	var buffered_writes int = 1000
+	write_heap := make(WriteQueue, 0, buffered_writes) // Set capacity to write buffer size
+	heap.Init(&write_heap)
+
+	/*
+		For optimizing the outputs, an AVL tree can be used to a balance them as the
+		positions used are calculated. Then the buffer can be purged afterwards.
+	*/
 	rows := modulus_64
 	for {
+		if write_heap.Len() == buffered_writes {
+			WriteQueueToFile(&write_heap, output)
+		}
+
 		rl, err := reader.ReadString('\n')
 		if err != nil {
 			break
@@ -209,60 +232,23 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 		sp1 := calculate_buffer_position(p1, p2, modulus)
 		sp2 := calculate_buffer_position(p2, p1, modulus)
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Trying to output the profile name in the right spot
-		// Seems to be putting data in the correct spots for each row
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		output.Seek(0, io.SeekStart)
+		// TODO making more writes than nessecary
 		profile_1_name := pad_value(data[profile_1_pos], mask)
-		name_out, err := output.WriteAt(profile_1_name, int64(p1)*modulus_64*pad_len)
-		_ = name_out
-		if err != nil {
-			log.Fatal(err)
-		}
+		heap.Push(&write_heap, &WriteValue{key: int64(p1) * modulus_64 * pad_len, value: profile_1_name, index: 0})
+		heap.Push(&write_heap, &WriteValue{key: int64(p1) * pad_len, value: profile_1_name, index: 0}) // Write the columns position
 
-		// === column 1 position
-		output.Seek(0, io.SeekStart)
-		name_out, err = output.WriteAt(profile_1_name, int64(p1)*pad_len) // column position
-		_ = name_out
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		output.Seek(0, io.SeekStart)
 		profile_2_name := pad_value(data[profile_2_pos], mask)
-		name_out, err = output.WriteAt(profile_2_name, int64(p2)*modulus_64*pad_len)
-		_ = name_out
-		if err != nil {
-			log.Fatal(err)
-		}
+		heap.Push(&write_heap, &WriteValue{key: int64(p2) * modulus_64 * pad_len, value: profile_2_name, index: 0})
+		heap.Push(&write_heap, &WriteValue{key: int64(p2) * pad_len, value: profile_2_name, index: 0}) // Column Position to write
 
-		// column 2 position
-		output.Seek(0, io.SeekStart)
-		name_out, err = output.WriteAt(profile_2_name, int64(p2)*pad_len)
-		_ = name_out
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		// Write at offsets
-		output.Seek(0, io.SeekStart)
 		// * name pad_len should only be applied to one value, this will differ for the top row
-		b1, err := output.WriteAt(string_val, (sp1 * pad_len)) // increasing by one pad for label name
-		_ = b1
-		if err != nil {
-			log.Fatal(err)
-		}
+		heap.Push(&write_heap, &WriteValue{key: sp1 * pad_len, value: string_val, index: 0})
+		heap.Push(&write_heap, &WriteValue{key: sp2 * pad_len, value: string_val, index: 0})
 
-		output.Seek(0, io.SeekStart)
-		b2, err := output.WriteAt(string_val, (sp2 * pad_len))
-		_ = b2
+	}
 
-		if err != nil {
-			log.Fatal(err)
-		}
+	if write_heap.Len() > 0 {
+		WriteQueueToFile(&write_heap, output)
 	}
 
 	// Add byte mask to start of file, to prevent binary inclusion
@@ -294,12 +280,6 @@ func write_matrix(input_path string, output_path string, positions *map[string]i
 	defer output.Close()
 }
 
-func calculate_buffer_size(key_len int) int {
-	size := key_len * key_len
-	// TODO need to incorporate the profile name in this output
-	return size
-}
-
 func calculate_buffer_position(p1 int, p2 int, modulus int) int64 {
 	/*
 		rows and columns provided here, the value can go to two positions,
@@ -307,21 +287,7 @@ func calculate_buffer_position(p1 int, p2 int, modulus int) int64 {
 
 		e.g. to get rows (p1) * modulus + p2 (columns) and flip the location for the other value
 	*/
-	//fmt.Fprintf(os.Stdout, "%d %d\n", p1, p2)
-	// TODO need to incorporate the profile name in this output
 	return int64((p1 * modulus) + p2)
-}
-
-func print_buffer(buffer *[]int, modulus int, buff_size int) {
-	// ! This will go once memory mapping is implemented
-	fmt.Fprintf(os.Stdout, "\n")
-	for i := 1; i < buff_size; i++ {
-		fmt.Fprintf(os.Stdout, "%d\t", (*buffer)[i-1])
-		if i%modulus == 0 {
-			fmt.Fprintf(os.Stdout, "\n")
-		}
-	}
-	fmt.Fprintf(os.Stdout, "\n")
 }
 
 /*

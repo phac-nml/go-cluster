@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path"
 	"testing"
 )
@@ -23,8 +23,8 @@ func TestIdentifyMatches(t *testing.T) {
 	output_buffer.Flush()
 	out_file.Close()
 
-	f1, _ := ioutil.ReadFile(output_fm)
-	f2, _ := ioutil.ReadFile(expected_output)
+	f1, _ := os.ReadFile(output_fm)
+	f2, _ := os.ReadFile(expected_output)
 	if !bytes.Equal(f1, f2) {
 		t.Fatal("Input and output files to not match.")
 	}

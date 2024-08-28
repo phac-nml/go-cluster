@@ -3,7 +3,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path"
 	"testing"
 )
@@ -21,8 +21,8 @@ func TestPairwiseToMatrix(t *testing.T) {
 
 	PairwiseToMatrix(test_input_file, test_output_file)
 
-	f1, _ := ioutil.ReadFile(test_expected_file)
-	f2, _ := ioutil.ReadFile(test_output_file)
+	f1, _ := os.ReadFile(test_expected_file)
+	f2, _ := os.ReadFile(test_output_file)
 	if !bytes.Equal(f1, f2) {
 		t.Fatal("Input and expected distance matrix files do not match.")
 	}

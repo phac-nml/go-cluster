@@ -22,17 +22,48 @@ Determine how many bins of the input dataset should be processed when running th
 The bucket size means the x Profiles will be processed by a thread, which will directly
 relate to how many go routines are run at a time.
 */
-func CalculateBucketSize(data_length int, runtime_cpus int, cpu_modifier int) int {
-	if cpu_modifier <= 0 {
-		log.Fatal("CPU modifier must be greater than 0")
+func CalculateBucketSize(data_length int, minimum_bins int, bucket_increase int) (int, int) {
+
+	if minimum_bins == 0 {
+		log.Fatal("You must have a CPU modifier value greater than 0")
 	}
-	bucket_size := data_length / (runtime_cpus * cpu_modifier)
-	return bucket_size
+
+	bucket_size := (data_length / minimum_bins)
+	if bucket_size == 0 {
+		bucket_size++
+	}
+
+	remainder := data_length % minimum_bins
+
+	if remainder == 0 {
+		/*
+			when the remainder is 0 there is now spill over resulting in a
+			temporary reduction in the number of "bins used". As there is no
+			spill over bin.
+		*/
+		bucket_size--
+	}
+
+	if data_length < bucket_size {
+		return data_length, 1
+	}
+
+	if bucket_size < minimum_bins {
+		bucket_size *= bucket_increase
+		minimum_bins = data_length / bucket_size
+	}
+
+	return bucket_size, minimum_bins
 }
 
 // A pair containing the start and end values for a given range of data to be processed.
 type Bucket struct {
 	start, end int
+}
+
+// Get the difference in indices between the two bucket fields
+func (t *Bucket) Diff() int {
+	return t.end - t.start
 }
 
 // The distance metric for a given comparison
@@ -41,42 +72,31 @@ type ComparedProfile struct {
 	distance            float64
 }
 
-/*
-For a given data set determine the the start and end range of each of the bins to be used.
-e.g. if a dataset has 1000 profiles, and our bucket size is 500 we will create bins with
-an of [0, 500], [500, 1000]
-*/
-func BucketsIndices(data_length int, bucket_size int) []Bucket {
-	var bucks []Bucket
-	cpu_load_factor := CPU_LOAD_FACTOR // Need to add description to global options
-	window := bucket_size
+// Calculate the initial bin sizes to use for running profiles in parallel
+func CreateBucketIndices(data_length int, bucket_size int, modifier int) []Bucket {
+	var buckets []Bucket
 
-	cpu_load_string := fmt.Sprintf("CPU load factor x%d", cpu_load_factor)
-	log.Println(cpu_load_string)
-
-	if window > data_length {
-		bucks = append(bucks, Bucket{0, data_length})
-		log.Println("Running single threaded as there are too few entries to justify multithreading.")
-		return bucks
+	if (data_length-modifier) < bucket_size || bucket_size > data_length {
+		// Just return the one set of indices the values are small enough
+		buckets = append(buckets, Bucket{modifier, data_length})
+		return buckets
 	}
 
-	if data_length < (runtime.NumCPU() * cpu_load_factor) {
-		bucks = append(bucks, Bucket{0, data_length})
-		log.Println("Running single threaded as there are too few entries to justify multithreading.")
-		return bucks
+	for i := (bucket_size + modifier); i < data_length; i = i + bucket_size {
+		new_bucket := Bucket{i - bucket_size, i}
+		buckets = append(buckets, new_bucket)
 	}
 
-	for i := window; i < data_length; i = i + window {
-		bucks = append(bucks, Bucket{i - window, i})
+	final_start := buckets[len(buckets)-1].end
+	final_end := data_length
+
+	if final_end-final_start < bucket_size {
+		// Extend the last index if required if it is very small
+		buckets[len(buckets)-1].end = data_length
+	} else {
+		buckets = append(buckets, Bucket{final_start, final_end})
 	}
-
-	bucks = append(bucks, Bucket{bucks[len(bucks)-1].end, data_length})
-
-	threads_running := fmt.Sprintf("Using %d threads for running.", len(bucks)-1)
-	log.Println(threads_running)
-	profiles_to_thread := fmt.Sprintf("Allocating ~%d profiles per a thread.", window)
-	log.Println(profiles_to_thread)
-	return bucks
+	return buckets
 }
 
 // Compute profile differences in a given go routine.
@@ -103,7 +123,8 @@ them directly to the passed in bufio.Writer.
 func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	/* Schedule and arrange the calculation of the data in parallel
 	This function is quite large and likely has room for optimization.
-	TODO redistribute data across threads at run time
+
+	Once day an incredible optimization here would be to go lockless, or re-use threads
 	*/
 
 	start := time.Now()
@@ -113,29 +134,30 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 
 	bucket_index := 0
 	empty_name := ""
-	const cpu_modifier = 2
-	bucket_size := CalculateBucketSize(len(data), runtime.NumCPU(), cpu_modifier)
-	buckets := BucketsIndices(len(data), bucket_size)
-	arr_pos := 1
+	const cpu_modifier = 3
+	data_size := len(data)
+	minimum_buckets := runtime.NumCPU() * cpu_modifier
+	bucket_size, _ := CalculateBucketSize(data_size, minimum_buckets, cpu_modifier)
+	buckets := CreateBucketIndices(data_size, bucket_size, 0)
 	format_expression := GetFormatString()
-
-	// TODO can create a pool of go routines and pass the profile to compare to each channel
+	initial_bucket_location := buckets[0].start
 	var wg sync.WaitGroup
-	for g := range data[0:] {
-		profile_comp := data[g] // copy struct for each thread
+
+	for idx := range data {
+		profile_comp := data[idx] // copy struct for each thread
 		values_write := make([]*[]*ComparedProfile, len(buckets)-bucket_index)
-		// TODO an incredible optimization here would be to go lockless, or re-use threads
-		for i := bucket_index; i < len(buckets); i++ {
-			array_writes := make([]*ComparedProfile, buckets[i].end-buckets[i].start)
-			values_write[i-bucket_index] = &array_writes
+		for b_idx, b := range buckets {
+			array_writes := make([]*ComparedProfile, b.Diff())
+			values_write[b_idx] = &array_writes
 			wg.Add(1)
 			go func(output_array *[]*ComparedProfile, bucket_compute Bucket, profile_compare *Profile) {
 				ThreadExecution(&data, profile_compare, bucket_compute, dist, output_array)
 				wg.Done()
-			}(&array_writes, buckets[i], profile_comp)
+			}(&array_writes, b, profile_comp)
 		}
-		wg.Wait()                     // Wait for everyone to catch up
-		buckets[bucket_index].start++ // update the current buckets tracker
+
+		wg.Wait()          // Wait for everyone to catch up
+		buckets[0].start++ // update the current buckets tracker
 
 		for _, i := range values_write {
 			for _, value := range *i {
@@ -143,19 +165,21 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			}
 		}
 
-		if len(buckets) > 1 && arr_pos%bucket_size == 0 {
-			for f := buckets[bucket_index].end - bucket_size; f < buckets[bucket_index].end; f++ {
-				data[f].profile = nil
-				data[f].name = empty_name
-
+		if len(buckets) != 1 && buckets[0].Diff() < minimum_buckets {
+			bucket_size, minimum_buckets = CalculateBucketSize(data_size-idx, minimum_buckets, cpu_modifier)
+			buckets = CreateBucketIndices(data_size, bucket_size, idx)
+			for index := initial_bucket_location; index < buckets[0].start; index++ {
+				data[index].profile = nil
+				data[index].name = empty_name
 			}
-			bucket_index++
-			end := time.Now().Sub(start)
-			thread_depletion_time := fmt.Sprintf("One thread depleted in: %fs", end.Seconds())
+			initial_bucket_location = buckets[0].start
+			buckets[0].start++ // start index is reserved so needs to be incremented
+			end := time.Since(start)
+			thread_depletion_time := fmt.Sprintf("Redistributing data across threads. %fs", end.Seconds())
 			log.Println(thread_depletion_time)
 			start = time.Now()
 		}
-		arr_pos++
+
 	}
 	wg.Wait()
 	f.Flush()

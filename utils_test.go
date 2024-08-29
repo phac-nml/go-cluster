@@ -11,13 +11,13 @@ type SplitLineTest struct {
 }
 
 var SplitLineTests = []SplitLineTest{
-	SplitLineTest{"1\t2\n", "\n", "\t", []string{"1", "2"}},
-	SplitLineTest{"1,2\n", "\n", ",", []string{"1", "2"}},
-	SplitLineTest{"1,2\n\n", "\n", ",", []string{"1", "2"}},
-	SplitLineTest{"1,,3\n\n", "\n", ",", []string{"1", "", "3"}},
-	SplitLineTest{"1\t\t3\n", "\n", "\t", []string{"1", "", "3"}},
-	SplitLineTest{"1\t\t\t3\n", "\n", "\t", []string{"1", "", "", "3"}},
-	SplitLineTest{"1      3\n", "\n", "  ", []string{"1", "", "", "3"}}, // double spaces as delimiter
+	{"1\t2\n", "\n", "\t", []string{"1", "2"}},
+	{"1,2\n", "\n", ",", []string{"1", "2"}},
+	{"1,2\n\n", "\n", ",", []string{"1", "2"}},
+	{"1,,3\n\n", "\n", ",", []string{"1", "", "3"}},
+	{"1\t\t3\n", "\n", "\t", []string{"1", "", "3"}},
+	{"1\t\t\t3\n", "\n", "\t", []string{"1", "", "", "3"}},
+	{"1      3\n", "\n", "  ", []string{"1", "", "", "3"}}, // double spaces as delimiter
 }
 
 func TestSplitLine(t *testing.T) {
@@ -36,7 +36,7 @@ type LineToProfileTest struct {
 }
 
 var LineToProfileTests = []LineToProfileTest{
-	LineToProfileTest{
+	{
 		[]string{"profile1", "name2", "name1", "0"}, // outputs for each column should be one as they are in the same columns
 		"0",
 		Profile{"profile1", &[]int{1, 1, MissingAlleleValue}},

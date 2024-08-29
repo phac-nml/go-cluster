@@ -87,11 +87,7 @@ func TestRedistributeBuckets(t *testing.T) {
 		}
 		resize_ratio := bucket_indices[len(bucket_indices)-1].Diff() >> 2
 		if len(bucket_indices) != 1 && bucket_indices[0].Diff() < resize_ratio {
-			old_min := minimum_bucket_size
 			buckets, minimum_bucket_size = CalculateBucketSize(profile_size-val, minimum_bucket_size, BUCKET_SCALE)
-			if old_min < minimum_bucket_size {
-				minimum_bucket_size--
-			}
 			bucket_indices = CreateBucketIndices(profile_size, buckets, val)
 		}
 		bucket_indices[0].start++

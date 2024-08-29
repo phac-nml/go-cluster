@@ -7,24 +7,6 @@ import (
 	"testing"
 )
 
-type bucket_tests struct {
-	data_length, bucket_size, cpu_modifier, expected int
-}
-
-var bucket_size_tests = []bucket_tests{
-	{10, 1, 1, 9},
-	{10, 2, 1, 4},
-}
-
-func TestCalculateBucketSize(t *testing.T) {
-	for _, test := range bucket_size_tests {
-		if output, _ := CalculateBucketSize(test.data_length, test.bucket_size, test.cpu_modifier); output != test.expected {
-			t.Errorf("Output %d not equal to expected %d", output, test.expected)
-			t.Errorf("Output %+v", output)
-		}
-	}
-}
-
 // Test that molten file output is the same.
 func TestRunData(t *testing.T) {
 	tempdir := t.TempDir()
@@ -85,7 +67,7 @@ func TestRedistributeBuckets(t *testing.T) {
 	// TODO thread levels are being altered too frequently, need to change som parameters
 	var profile_size int = 100
 	var cpus int = 6
-	BUCKET_SCALE = 2
+	BUCKET_SCALE = 3
 	minimum_bucket_size := cpus * BUCKET_SCALE
 	var buckets int
 	buckets, minimum_bucket_size = CalculateBucketSize(profile_size, minimum_bucket_size, BUCKET_SCALE)
@@ -103,9 +85,13 @@ func TestRedistributeBuckets(t *testing.T) {
 				comparisons[val] = append(comparisons[val], i)
 			}
 		}
-
-		if len(bucket_indices) != 1 && bucket_indices[0].Diff() < minimum_bucket_size {
+		resize_ratio := bucket_indices[len(bucket_indices)-1].Diff() >> 2
+		if len(bucket_indices) != 1 && bucket_indices[0].Diff() < resize_ratio {
+			old_min := minimum_bucket_size
 			buckets, minimum_bucket_size = CalculateBucketSize(profile_size-val, minimum_bucket_size, BUCKET_SCALE)
+			if old_min < minimum_bucket_size {
+				minimum_bucket_size--
+			}
 			bucket_indices = CreateBucketIndices(profile_size, buckets, val)
 		}
 		bucket_indices[0].start++

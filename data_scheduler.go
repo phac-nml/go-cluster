@@ -28,29 +28,14 @@ func CalculateBucketSize(data_length int, minimum_bins int, bucket_increase int)
 		log.Fatal("You must have a CPU modifier value greater than 0")
 	}
 
-	bucket_size := (data_length / minimum_bins)
-	if bucket_size == 0 {
-		bucket_size++
-	}
-
-	remainder := data_length % minimum_bins
-
-	if remainder == 0 {
-		/*
-			when the remainder is 0 there is now spill over resulting in a
-			temporary reduction in the number of "bins used". As there is no
-			spill over bin.
-		*/
-		bucket_size--
-	}
-
-	if data_length < bucket_size {
+	if data_length < minimum_bins {
 		return data_length, 1
 	}
 
-	if bucket_size < minimum_bins {
-		bucket_size *= bucket_increase
-		minimum_bins = data_length / bucket_size
+	bucket_size := (data_length / minimum_bins) + bucket_increase
+
+	if data_length < bucket_size {
+		return data_length, 1
 	}
 
 	return bucket_size, minimum_bins
@@ -75,27 +60,17 @@ type ComparedProfile struct {
 // Calculate the initial bin sizes to use for running profiles in parallel
 func CreateBucketIndices(data_length int, bucket_size int, modifier int) []Bucket {
 	var buckets []Bucket
-
-	if (data_length-modifier) < bucket_size || bucket_size > data_length {
+	if (data_length - modifier) <= bucket_size {
 		// Just return the one set of indices the values are small enough
 		buckets = append(buckets, Bucket{modifier, data_length})
-		return buckets
 	}
 
 	for i := (bucket_size + modifier); i < data_length; i = i + bucket_size {
 		new_bucket := Bucket{i - bucket_size, i}
 		buckets = append(buckets, new_bucket)
 	}
+	buckets[len(buckets)-1].end = data_length
 
-	final_start := buckets[len(buckets)-1].end
-	final_end := data_length
-
-	if final_end-final_start < bucket_size {
-		// Extend the last index if required if it is very small
-		buckets[len(buckets)-1].end = data_length
-	} else {
-		buckets = append(buckets, Bucket{final_start, final_end})
-	}
 	return buckets
 }
 
@@ -165,7 +140,9 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			}
 		}
 
-		if len(buckets) != 1 && buckets[0].Diff() < minimum_buckets {
+		resize_ratio := buckets[len(buckets)-1].Diff() >> 2
+		if len(buckets) != 1 && buckets[0].Diff() < resize_ratio {
+			//if len(buckets) != 1 && buckets[0].Diff() < minimum_buckets {
 			bucket_size, minimum_buckets = CalculateBucketSize(data_size-idx, minimum_buckets, cpu_modifier)
 			buckets = CreateBucketIndices(data_size, bucket_size, idx)
 			for index := initial_bucket_location; index < buckets[0].start; index++ {

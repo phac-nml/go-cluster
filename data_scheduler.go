@@ -60,9 +60,11 @@ type ComparedProfile struct {
 // Calculate the initial bin sizes to use for running profiles in parallel
 func CreateBucketIndices(data_length int, bucket_size int, modifier int) []Bucket {
 	var buckets []Bucket
+
 	if (data_length - modifier) <= bucket_size {
 		// Just return the one set of indices the values are small enough
 		buckets = append(buckets, Bucket{modifier, data_length})
+
 	}
 
 	for i := (bucket_size + modifier); i < data_length; i = i + bucket_size {
@@ -143,6 +145,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 		resize_ratio := buckets[len(buckets)-1].Diff() >> 2
 		if len(buckets) != 1 && buckets[0].Diff() < resize_ratio {
 			//if len(buckets) != 1 && buckets[0].Diff() < minimum_buckets {
+
 			bucket_size, minimum_buckets = CalculateBucketSize(data_size-idx, minimum_buckets, cpu_modifier)
 			buckets = CreateBucketIndices(data_size, bucket_size, idx)
 			for index := initial_bucket_location; index < buckets[0].start; index++ {

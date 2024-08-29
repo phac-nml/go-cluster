@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+
 // Test that molten file output is the same.
 func TestRunData(t *testing.T) {
 	tempdir := t.TempDir()
@@ -64,10 +65,12 @@ func TestRunDataSmall(t *testing.T) {
 
 // Testing the redistribution of bucket indices at runtime
 func TestRedistributeBuckets(t *testing.T) {
+
 	// TODO thread levels are being altered too frequently, need to change som parameters
 	var profile_size int = 100
 	var cpus int = 6
 	BUCKET_SCALE = 3
+
 	minimum_bucket_size := cpus * BUCKET_SCALE
 	var buckets int
 	buckets, minimum_bucket_size = CalculateBucketSize(profile_size, minimum_bucket_size, BUCKET_SCALE)
@@ -85,8 +88,10 @@ func TestRedistributeBuckets(t *testing.T) {
 				comparisons[val] = append(comparisons[val], i)
 			}
 		}
+
 		resize_ratio := bucket_indices[len(bucket_indices)-1].Diff() >> 2
 		if len(bucket_indices) != 1 && bucket_indices[0].Diff() < resize_ratio {
+
 			buckets, minimum_bucket_size = CalculateBucketSize(profile_size-val, minimum_bucket_size, BUCKET_SCALE)
 			bucket_indices = CreateBucketIndices(profile_size, buckets, val)
 		}

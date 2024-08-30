@@ -81,6 +81,7 @@ func TestRedistributeBuckets(t *testing.T) {
 	}
 
 	corrected_profile_size := profile_size
+	resize_ratio := bucket_indices[len(bucket_indices)-1].Diff() >> 2
 	for val := range profile_size {
 		for _, b := range bucket_indices {
 			for i := b.start; i < b.end; i++ {
@@ -88,11 +89,11 @@ func TestRedistributeBuckets(t *testing.T) {
 			}
 		}
 
-		resize_ratio := bucket_indices[len(bucket_indices)-1].Diff() >> 2
 		if len(bucket_indices) != 1 && bucket_indices[0].Diff() < resize_ratio {
 
 			buckets, minimum_bucket_size = CalculateBucketSize(profile_size-val, minimum_bucket_size, BUCKET_SCALE)
 			bucket_indices = CreateBucketIndices(profile_size, buckets, val)
+			resize_ratio = bucket_indices[len(bucket_indices)-1].Diff() >> 2
 		}
 		bucket_indices[0].start++
 	}

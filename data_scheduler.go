@@ -117,7 +117,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	format_expression := GetFormatString()
 	initial_bucket_location := buckets[0].start
 	var wg sync.WaitGroup
-
+	resize_ratio := buckets[len(buckets)-1].Diff() >> 2
 	for idx := range data {
 		profile_comp := data[idx] // copy struct for each thread
 		values_write := make([]*[]*ComparedProfile, len(buckets)-bucket_index)
@@ -140,9 +140,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			}
 		}
 
-		resize_ratio := buckets[len(buckets)-1].Diff() >> 2
 		if len(buckets) != 1 && buckets[0].Diff() < resize_ratio {
-
 			bucket_size, minimum_buckets = CalculateBucketSize(data_size-idx, minimum_buckets, cpu_modifier)
 			buckets = CreateBucketIndices(data_size, bucket_size, idx)
 			for index := initial_bucket_location; index < buckets[0].start; index++ {
@@ -150,6 +148,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 			}
 			initial_bucket_location = buckets[0].start
 			buckets[0].start++ // start index is reserved so needs to be incremented
+			resize_ratio = buckets[len(buckets)-1].Diff() >> 2
 			end := time.Since(start)
 			thread_depletion_time := fmt.Sprintf("Redistributing data across %d threads processed %d/%d profiles. %fs", len(buckets), idx, data_size, end.Seconds())
 			log.Println(thread_depletion_time)

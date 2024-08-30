@@ -108,9 +108,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	data := *profile_data
 
 	dist := distance_functions[DIST_FUNC].function
-
 	bucket_index := 0
-	empty_name := ""
 	cpu_modifier := BUCKET_SCALE
 	data_size := len(data)
 	minimum_buckets := runtime.NumCPU() * cpu_modifier
@@ -144,13 +142,11 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 
 		resize_ratio := buckets[len(buckets)-1].Diff() >> 2
 		if len(buckets) != 1 && buckets[0].Diff() < resize_ratio {
-			//if len(buckets) != 1 && buckets[0].Diff() < minimum_buckets {
 
 			bucket_size, minimum_buckets = CalculateBucketSize(data_size-idx, minimum_buckets, cpu_modifier)
 			buckets = CreateBucketIndices(data_size, bucket_size, idx)
 			for index := initial_bucket_location; index < buckets[0].start; index++ {
-				data[index].profile = nil
-				data[index].name = empty_name
+				data[index] = nil
 			}
 			initial_bucket_location = buckets[0].start
 			buckets[0].start++ // start index is reserved so needs to be incremented

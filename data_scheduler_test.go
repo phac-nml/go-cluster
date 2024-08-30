@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-
 // Test that molten file output is the same.
 func TestRunData(t *testing.T) {
 	tempdir := t.TempDir()
@@ -117,4 +116,20 @@ func TestRedistributeBuckets(t *testing.T) {
 			idx++
 		}
 	}
+}
+
+func benchmarkRunData(path_in string, b *testing.B) {
+	tempdir := b.TempDir()
+	for n := 0; n < b.N; n++ {
+		test_output_file := path.Join(tempdir, "output.txt")
+		out_buffer, out_file := CreateOutputBuffer(test_output_file)
+		test_data := LoadProfile(path_in)
+		RunData(test_data, out_buffer)
+		out_buffer.Flush()
+		out_file.Close()
+	}
+}
+
+func BenchmarkRunData(b *testing.B) {
+	benchmarkRunData("TestInputs/DistanceMatrix/Random1000.txt", b)
 }

@@ -23,7 +23,7 @@ var INPUT_PROFILE string = ""
 var OUTPUT_FILE string = ""
 var REFERENCE_PROFILES string = ""
 var MATCH_THRESHOLD float64 = 10
-var BUFFER_SIZE int = 16384 // 3 times bigger then 4096
+var BUFFER_SIZE int = 16384 // 4 times bigger then 4096
 var LINKAGE_METHOD int = 0
 var distance_matrix *flaggy.Subcommand
 var convert_matrix *flaggy.Subcommand

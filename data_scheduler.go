@@ -87,9 +87,8 @@ func ThreadExecution(data_slice *[]*Profile, profile_compare *Profile, bucket Bu
 
 	for i := bucket.start; i < bucket.end; i++ {
 		x := dist_fn((*data_slice)[i].profile, profile_compare.profile)
-
 		output := ComparedProfile{&profile_compare.name, &(*data_slice)[i].name, x}
-		(*array_writes)[i-bucket.start] = &output
+		(*array_writes)[i] = &output
 	}
 }
 
@@ -108,61 +107,57 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	data := *profile_data
 
 	dist := distance_functions[DIST_FUNC].function
-	//bucket_index := 0
+
 	cpu_modifier := BUCKET_SCALE
 	data_size := len(data)
 	minimum_buckets := runtime.NumCPU() * cpu_modifier
 	bucket_size, _ := CalculateBucketSize(data_size, minimum_buckets, cpu_modifier)
 	buckets := CreateBucketIndices(data_size, bucket_size, 0)
 	format_expression := GetFormatString()
-	initial_bucket_location := buckets[0].start
 	var wg sync.WaitGroup
+	var wg_writes sync.WaitGroup
 	resize_ratio := buckets[len(buckets)-1].Diff() >> 2
-	values_write := make([]*[]*ComparedProfile, len(buckets), len(buckets)*2)
+	values_write := [][]*ComparedProfile{make([]*ComparedProfile, data_size), make([]*ComparedProfile, data_size)}
+	values_write_idx := 0
+	values_swap_val := 1
 
 	for idx := range data {
 		profile_comp := data[idx] // copy struct for each thread
-
-		for b_idx, b := range buckets {
-			array_writes := make([]*ComparedProfile, b.Diff())
-			values_write[b_idx] = &array_writes
+		for b_idx := 0; b_idx < len(buckets); b_idx++ {
 			wg.Add(1)
 			go func(output_array *[]*ComparedProfile, bucket_compute Bucket, profile_compare *Profile) {
 				ThreadExecution(&data, profile_compare, bucket_compute, dist, output_array)
 				wg.Done()
-			}(&array_writes, b, profile_comp)
+			}(&values_write[values_write_idx], buckets[b_idx], profile_comp)
 		}
+		wg.Wait() // Wait for everyone to catch up
 
-		wg.Wait()          // Wait for everyone to catch up
-		buckets[0].start++ // update the current buckets tracker
-
-		for _, i := range values_write {
-			for _, value := range *i {
-				fmt.Fprintf(f, format_expression, *(*value).compared, *(*value).reference, (*value).distance)
+		wg_writes.Wait() // Wait for previous writes to finish before swapping buffers
+		wg_writes.Add(1)
+		// Writes are double buffered, so we swap in between values as execute them
+		go func(write_idx int, start int, stop int) {
+			for i := start; i < stop; i++ {
+				value := values_write[write_idx][i]
+				str_out := fmt.Sprintf(format_expression, *(*value).compared, *(*value).reference, (*value).distance)
+				fmt.Fprint(f, str_out)
 			}
-			i = nil
-		}
+			wg_writes.Done()
+		}(values_write_idx, buckets[0].start, buckets[len(buckets)-1].end)
 
+		values_write_idx ^= values_swap_val // XOR to alternate value between 1 and 0 e.g. the write array buffers
+
+		buckets[0].start++ // update the current buckets tracker
 		if old_bucket_length := len(buckets); old_bucket_length != 1 && buckets[0].Diff() < resize_ratio {
 			bucket_size, minimum_buckets = CalculateBucketSize(data_size-idx, minimum_buckets, cpu_modifier)
 			buckets = CreateBucketIndices(data_size, bucket_size, idx)
-			for index := initial_bucket_location; index < buckets[0].start; index++ {
-				data[index] = nil
-			}
-
-			initial_bucket_location = buckets[0].start
 			buckets[0].start++ // start index is reserved so needs to be incremented
-
-			//Optimizations to be made here
-			values_write = make([]*[]*ComparedProfile, len(buckets))
-
 			resize_ratio = buckets[len(buckets)-1].Diff() >> 2
-			end := time.Since(start)
-			thread_depletion_time := fmt.Sprintf("Redistributing data across %d threads processed %d/%d profiles. %fs", len(buckets), idx, data_size, end.Seconds())
-			log.Println(thread_depletion_time)
-			start = time.Now()
+			log.Printf("Redistributing %d values across %d threads.\n", data_size-buckets[0].start, len(buckets))
 		}
 	}
+
+	log.Printf("Finished calculating all distances in %fs\n", time.Since(start).Seconds())
+	wg_writes.Wait()
 
 	wg.Wait()
 	f.Flush()

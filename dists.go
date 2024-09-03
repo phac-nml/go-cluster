@@ -32,7 +32,7 @@ func HammingDistance(profile_1 *[]int, profile_2 *[]int) float64 {
 
 	p1 := *profile_1
 	p2 := *profile_2
-	count := 0
+	var count float64 = 0.0
 	profile_len := len(p1)
 	for idx := 0; idx < profile_len; idx++ {
 
@@ -45,21 +45,42 @@ func HammingDistance(profile_1 *[]int, profile_2 *[]int) float64 {
 			count++
 		}
 	}
-	return float64(count)
+	return count
+}
+
+// Hamming distance with missing values not counted as differences
+func HammingDistanceEql(profile_1 *[]int, profile_2 *[]int) float64 {
+
+	p1 := *profile_1
+	p2 := *profile_2
+	var count float64 = 0.0
+	profile_len := len(p1)
+	for idx := 0; idx < profile_len; idx++ {
+
+		if (p1[idx] * p2[idx]) == MissingAlleleValue {
+			// If either value is 0 it is missing
+			continue
+		}
+
+		if p1[idx] == p2[idx] {
+			count++
+		}
+	}
+	return count
 }
 
 // Returns hamming distance, with missing values counted as differences
 func HammingDistanceMissing(profile_1 *[]int, profile_2 *[]int) float64 {
 	p1 := *profile_1
 	p2 := *profile_2
-	count := 0
 	profile_len := len(p1)
+	var count float64 = 0.0
 	for idx := 0; idx < profile_len; idx++ {
 		if (p1[idx] ^ p2[idx]) != MissingAlleleValue {
 			count++
 		}
 	}
-	return float64(count)
+	return count
 }
 
 // Scaled distance with missing data not included as differences

@@ -100,7 +100,6 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	/* Schedule and arrange the calculation of the data in parallel
 	This function is quite large and likely has room for optimization.
 
-	Once day an incredible optimization here would be to go lockless, or re-use threads
 	*/
 
 	start := time.Now()
@@ -119,7 +118,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 	resize_ratio := buckets[len(buckets)-1].Diff() >> 2
 	values_write := [][]*ComparedProfile{make([]*ComparedProfile, data_size), make([]*ComparedProfile, data_size)}
 	values_write_idx := 0
-	values_swap_val := 1
+	const values_swap_val int = 1
 
 	for idx := range data {
 		profile_comp := data[idx] // copy struct for each thread
@@ -138,8 +137,7 @@ func RunData(profile_data *[]*Profile, f *bufio.Writer) {
 		go func(write_idx int, start int, stop int) {
 			for i := start; i < stop; i++ {
 				value := values_write[write_idx][i]
-				str_out := fmt.Sprintf(format_expression, *(*value).compared, *(*value).reference, (*value).distance)
-				fmt.Fprint(f, str_out)
+				fmt.Fprintf(f, format_expression, *(*value).compared, *(*value).reference, (*value).distance)
 			}
 			wg_writes.Done()
 		}(values_write_idx, buckets[0].start, buckets[len(buckets)-1].end)

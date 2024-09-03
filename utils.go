@@ -20,7 +20,7 @@ func CreateOutputBuffer(file_in string) (*bufio.Writer, os.File) {
 	var f *bufio.Writer
 	var file os.File
 	if file_in != "" {
-		file := open_file(file_in, os.O_WRONLY|os.O_SYNC)
+		file := open_file(file_in, os.O_WRONLY)
 		f = bufio.NewWriterSize(io.Writer(file), BUFFER_SIZE)
 	} else {
 		f = bufio.NewWriterSize(os.Stdout, BUFFER_SIZE)

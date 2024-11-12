@@ -30,7 +30,7 @@ var convert_matrix *flaggy.Subcommand
 var fast_match *flaggy.Subcommand
 var tree *flaggy.Subcommand
 
-const version string = "0.0.2"
+const version string = "0.0.3"
 const integer_required_distance_functions_threshold = 2
 
 func cli() {

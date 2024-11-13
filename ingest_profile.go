@@ -168,12 +168,13 @@ func IngestMatrix(input string) ([][]float64, []string) {
 	var matrix [][]float64
 	var ids []string
 	line := 0
+	const float_bitsize int = 64
 	for scanner.Scan() {
 		separated_line := *SplitLine(scanner.Text(), NEWLINE_CHARACTER, COLUMN_DELIMITER)
 		row := make([]float64, len(separated_line)-1) // Separated Line length includes column ID
-		ids = append(ids, separated_line[0])
+		ids = append(ids, strings.TrimSpace(separated_line[0]))
 		for idx, value := range separated_line[1:] {
-			parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+			parsed, err := strconv.ParseFloat(strings.TrimSpace(value), float_bitsize)
 			if err != nil {
 				log.Fatalf("Could not convert value %s into a float64 value. Did you use this program to generate your distance matrix? [Line: %d Column %d]", value, line, idx)
 			}

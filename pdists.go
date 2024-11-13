@@ -23,14 +23,14 @@ var INPUT_PROFILE string = ""
 var OUTPUT_FILE string = ""
 var REFERENCE_PROFILES string = ""
 var MATCH_THRESHOLD float64 = 10
-var BUFFER_SIZE int = 16384 // 3 times bigger then 4096
+var BUFFER_SIZE int = 16384 // 4 times bigger then 4096
 var LINKAGE_METHOD int = 0
 var distance_matrix *flaggy.Subcommand
 var convert_matrix *flaggy.Subcommand
 var fast_match *flaggy.Subcommand
 var tree *flaggy.Subcommand
 
-const version string = "0.0.2"
+const version string = "0.0.3"
 const integer_required_distance_functions_threshold = 2
 
 func cli() {

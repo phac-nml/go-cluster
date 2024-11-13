@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-
 // Test that molten file output is the same.
 func TestRunData(t *testing.T) {
 	tempdir := t.TempDir()
@@ -82,6 +81,7 @@ func TestRedistributeBuckets(t *testing.T) {
 	}
 
 	corrected_profile_size := profile_size
+	resize_ratio := bucket_indices[len(bucket_indices)-1].Diff() >> 2
 	for val := range profile_size {
 		for _, b := range bucket_indices {
 			for i := b.start; i < b.end; i++ {
@@ -89,11 +89,11 @@ func TestRedistributeBuckets(t *testing.T) {
 			}
 		}
 
-		resize_ratio := bucket_indices[len(bucket_indices)-1].Diff() >> 2
 		if len(bucket_indices) != 1 && bucket_indices[0].Diff() < resize_ratio {
 
 			buckets, minimum_bucket_size = CalculateBucketSize(profile_size-val, minimum_bucket_size, BUCKET_SCALE)
 			bucket_indices = CreateBucketIndices(profile_size, buckets, val)
+			resize_ratio = bucket_indices[len(bucket_indices)-1].Diff() >> 2
 		}
 		bucket_indices[0].start++
 	}
@@ -117,4 +117,20 @@ func TestRedistributeBuckets(t *testing.T) {
 			idx++
 		}
 	}
+}
+
+func benchmarkRunData(path_in string, b *testing.B) {
+	tempdir := b.TempDir()
+	for n := 0; n < b.N; n++ {
+		test_output_file := path.Join(tempdir, "output.txt")
+		out_buffer, out_file := CreateOutputBuffer(test_output_file)
+		test_data := LoadProfile(path_in)
+		RunData(test_data, out_buffer)
+		out_buffer.Flush()
+		out_file.Close()
+	}
+}
+
+func BenchmarkRunData(b *testing.B) {
+	benchmarkRunData("TestInputs/DistanceMatrix/Random1000.txt", b)
 }

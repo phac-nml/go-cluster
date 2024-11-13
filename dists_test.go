@@ -74,11 +74,26 @@ func benchmarkDistance(dist func(*[]int, *[]int) float64, profile1 []int, profil
 	}
 }
 
-func BenchmarkHamming6(b *testing.B) {
+func BenchmarkHamming20(b *testing.B) {
 	benchmarkDistance(
 		HammingDistance,
-		[]int{1, 2, 3, 4, 5, 6},
-		[]int{1, 2, 3, 4, 5, 6}, b)
+		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20},
+		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20}, b)
+
+}
+
+func BenchmarkHammingEql20(b *testing.B) {
+	benchmarkDistance(
+		HammingDistanceEql,
+		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20},
+		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20}, b)
+}
+
+func BenchmarkHammingMissing20(b *testing.B) {
+	benchmarkDistance(
+		HammingDistanceMissing,
+		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20},
+		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20}, b)
 }
 
 func BenchmarkHamming10k(b *testing.B) {
